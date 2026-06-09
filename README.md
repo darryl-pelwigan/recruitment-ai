@@ -36,6 +36,7 @@ An AI-powered recruitment tracking system that automates and streamlines the ent
 | Technology | Purpose |
 |---|---|
 | React | UI library |
+| TypeScript | Static typing |
 | Vite | Build tool / dev server |
 | Tailwind CSS | Utility-first styling |
 | Axios | HTTP client |
@@ -45,6 +46,59 @@ An AI-powered recruitment tracking system that automates and streamlines the ent
 
 - **PostgreSQL** — Primary relational database
 
+---
+
+## Project Structure
+
+```
+recruitment-ai/
+├── backend/
+│   └── app/
+│       ├── main.py               # FastAPI app entry point
+│       ├── config.py             # Environment/settings (Pydantic BaseSettings)
+│       ├── models/               # SQLAlchemy ORM models
+│       │   ├── user.py
+│       │   ├── job.py
+│       │   └── application.py
+│       ├── schemas/              # Pydantic request/response schemas
+│       │   ├── user_schema.py
+│       │   └── job_schema.py
+│       ├── routes/               # FastAPI routers
+│       │   ├── auth.py
+│       │   ├── jobs.py
+│       │   ├── applications.py
+│       │   └── ai.py
+│       ├── services/             # Business logic
+│       │   ├── auth_service.py
+│       │   └── ai_service.py     # NLP / candidate scoring logic
+│       └── core/
+│           ├── security.py       # JWT creation and verification
+│           └── database.py       # SQLAlchemy engine and session
+│   └── requirements.txt
+│
+└── frontend/
+    ├── App.tsx
+    ├── main.tsx
+    ├── tsconfig.json
+    ├── tailwind.config.ts
+    └── src/
+        ├── pages/
+        │   ├── Login.tsx
+        │   ├── Dashboard.tsx
+        │   ├── Jobs.tsx
+        │   ├── JobDetails.tsx
+        │   └── Applicants.tsx
+        ├── components/
+        │   ├── Navbar.tsx
+        │   ├── Sidebar.tsx
+        │   ├── JobCard.tsx
+        │   └── ApplicantTable.tsx
+        ├── services/
+        │   └── api.ts            # Axios instance and request helpers
+        └── store/                # Zustand global state
+```
+
+---
 
 ## Getting Started
 
@@ -107,24 +161,6 @@ npm run dev
 
 App runs at `http://localhost:5173`
 
----
-
-## API Overview
-
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/auth/register` | Register a new user |
-| POST | `/auth/login` | Login and receive JWT |
-| GET | `/jobs` | List all job postings |
-| POST | `/jobs` | Create a new job posting |
-| GET | `/jobs/{id}` | Get job details |
-| POST | `/applications` | Submit an application |
-| GET | `/applications/{job_id}` | List applicants for a job |
-| GET | `/ai/score/{application_id}` | Get AI score for an applicant |
-| GET | `/ai/rank/{job_id}` | Get ranked candidates for a job |
-
----
-
 ## Environment Variables
 
 | Variable | Description |
@@ -142,7 +178,7 @@ App runs at `http://localhost:5173`
 - **Schemas are separate from ORM models** — Pydantic schemas handle validation and serialization; SQLAlchemy models own persistence.
 - **`ai_service.py` owns all NLP logic** — scoring, keyword extraction, and ranking are isolated from routes.
 - **`security.py` is the single source of truth** for JWT encoding/decoding — token logic is never inlined elsewhere.
-- **Frontend API calls go through `services/api.js`** — components never call Axios directly.
+- **Frontend API calls go through `services/api.ts`** — components never call Axios directly.
 
 ---
 
