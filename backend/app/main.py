@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.core.database import engine, Base
 
 app = FastAPI(title="Recruitment AI System", version="1.0")
 
@@ -15,4 +14,4 @@ app.add_middleware(
 
 @app.get("/api/")
 def root():
-    return {"message": "Welcome to the Recruitment AI System!"}
+    return {"message": "Recruitment AI Running"}
