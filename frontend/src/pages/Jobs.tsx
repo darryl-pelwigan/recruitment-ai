@@ -80,15 +80,24 @@ export default function Jobs() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
       <Navbar />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        {/* Page header */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Explore The Jobs
-          </h1>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Explore The Jobs
+            </h1>
+            {data && (
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                {data.total} {data.total === 1 ? "position" : "positions"} available
+              </p>
+            )}
+          </div>
           {canManage && (
             <Link
               to="/jobs/new"
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-teal-600 hover:bg-teal-700 text-white transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl bg-teal-600 hover:bg-teal-700 text-white shadow-sm transition-colors"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19" />
@@ -99,78 +108,83 @@ export default function Jobs() {
           )}
         </div>
 
-        {/* Filter bar */}
-        <form onSubmit={handleSearch} className="mb-6 space-y-3">
-          <div className="flex gap-3 flex-wrap">
-            <input
-              type="text"
-              placeholder="Search by title or description..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="flex-1 min-w-48 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-            />
-            <input
-              type="text"
-              placeholder="Location..."
-              value={locationInput}
-              onChange={(e) => setLocationInput(e.target.value)}
-              className="w-40 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-teal-600 hover:bg-teal-700 text-white transition-colors"
-            >
-              Search
-            </button>
-            {(search || location || employmentType) && (
+        {/* Filter card */}
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 mb-6 shadow-sm">
+          <form onSubmit={handleSearch} className="space-y-3">
+            <div className="flex gap-2 flex-wrap">
+              <div className="flex-1 min-w-52 relative">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search by title or description..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
+                />
+              </div>
+              <div className="relative">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Location..."
+                  value={locationInput}
+                  onChange={(e) => setLocationInput(e.target.value)}
+                  className="pl-9 pr-3 py-2 w-44 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
+                />
+              </div>
               <button
-                type="button"
-                onClick={handleClear}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                type="submit"
+                className="px-5 py-2 text-sm font-medium rounded-xl bg-teal-600 hover:bg-teal-700 text-white transition-colors"
               >
-                Clear
+                Search
               </button>
-            )}
-          </div>
+              {(search || location || employmentType) && (
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  className="px-4 py-2 text-sm font-medium rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
 
-          {/* Employment type pills */}
-          <div className="flex flex-wrap gap-2">
-            {EMPLOYMENT_TYPES.map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => handleTypeChange(type)}
-                className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${
-                  employmentType === type
-                    ? "bg-teal-600 border-teal-600 text-white"
-                    : "border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-teal-500 hover:text-teal-600 dark:hover:text-teal-400"
-                }`}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
-        </form>
-
-        {/* Results count */}
-        {data && (
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            {data.total} {data.total === 1 ? "job" : "jobs"} found
-          </p>
-        )}
+            {/* Employment type pills */}
+            <div className="flex flex-wrap gap-2">
+              {EMPLOYMENT_TYPES.map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => handleTypeChange(type)}
+                  className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${
+                    employmentType === type
+                      ? "bg-teal-600 border-teal-600 text-white"
+                      : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-teal-400 hover:text-teal-600 dark:hover:text-teal-400 bg-gray-50 dark:bg-gray-800"
+                  }`}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+          </form>
+        </div>
 
         {/* Job list */}
         {loading ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
               <div
                 key={i}
-                className="h-28 rounded-xl bg-gray-200 dark:bg-gray-800 animate-pulse"
+                className="h-32 rounded-2xl bg-gray-200 dark:bg-gray-800 animate-pulse"
               />
             ))}
           </div>
         ) : data && data.jobs.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {data.jobs.map((job) => (
               <JobCard
                 key={job.id}
