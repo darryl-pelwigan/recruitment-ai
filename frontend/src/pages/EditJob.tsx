@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { api } from "../api/api";
 import Navbar from "../components/Navbar";
 import RichTextEditor from "../components/RichTextEditor";
@@ -32,24 +32,45 @@ function Field({
 const inputClass =
   "w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors";
 
-export default function PostJob() {
+export default function EditJob() {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const {
     register,
     control,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting },
-  } = useForm<JobData>({
-    resolver: zodResolver(jobSchema),
-    defaultValues: { status: "open" },
-  });
+  } = useForm<JobData>({ resolver: zodResolver(jobSchema) });
+
+  useEffect(() => {
+    api
+      .get(`/jobs/${id}`)
+      .then((res) => {
+        const j = res.data;
+        reset({
+          title: j.title ?? "",
+          description: j.description ?? "",
+          requirements: j.requirements ?? "",
+          skills_required: j.skills_required ?? "",
+          location: j.location ?? "",
+          employment_type: j.employment_type ?? "",
+          salary_min: j.salary_min ?? undefined,
+          salary_max: j.salary_max ?? undefined,
+          status: j.status ?? "open",
+        });
+      })
+      .catch(() => navigate("/jobs"))
+      .finally(() => setLoading(false));
+  }, [id, reset, navigate]);
 
   async function onSubmit(data: JobData) {
     setServerError(null);
     try {
-      await api.post("/jobs/", {
+      await api.put(`/jobs/${id}`, {
         ...data,
         employment_type: data.employment_type || null,
         salary_min: data.salary_min ?? null,
@@ -59,9 +80,22 @@ export default function PostJob() {
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data
-          ?.detail ?? "Failed to create job. Please try again.";
+          ?.detail ?? "Failed to update job. Please try again.";
       setServerError(msg);
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
+        <Navbar />
+        <main className="max-w-2xl mx-auto px-4 py-8 space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-10 rounded-lg bg-gray-200 dark:bg-gray-800 animate-pulse" />
+          ))}
+        </main>
+      </div>
+    );
   }
 
   return (
@@ -80,7 +114,7 @@ export default function PostJob() {
             Back to Jobs
           </Link>
           <h1 className="mt-3 text-2xl font-bold text-gray-900 dark:text-white">
-            Post a Job
+            Edit Job
           </h1>
         </div>
 
@@ -194,7 +228,7 @@ export default function PostJob() {
                 disabled={isSubmitting}
                 className="px-5 py-2 text-sm font-medium rounded-lg bg-teal-600 hover:bg-teal-700 disabled:opacity-60 text-white transition-colors"
               >
-                {isSubmitting ? "Posting..." : "Post Job"}
+                {isSubmitting ? "Saving..." : "Save Changes"}
               </button>
             </div>
           </form>

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api/api";
 import JobCard from "../components/JobCard";
 import type { Job } from "../components/JobCard";
 import Navbar from "../components/Navbar";
+import { useAuthStore } from "../store/authStore";
 
 const EMPLOYMENT_TYPES = ["Full-time", "Part-time", "Contract", "Remote"];
 
@@ -14,7 +16,11 @@ interface JobListResponse {
   total_pages: number;
 }
 
+const MANAGE_ROLES = ["admin", "hr", "recruiter"];
+
 export default function Jobs() {
+  const { user } = useAuthStore();
+  const canManage = user ? MANAGE_ROLES.includes(user.role) : false;
   const [data, setData] = useState<JobListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -60,6 +66,14 @@ export default function Jobs() {
     setPage(1);
   }
 
+  function handleJobDeleted(id: number) {
+    setData((prev) =>
+      prev
+        ? { ...prev, jobs: prev.jobs.filter((j) => j.id !== id), total: prev.total - 1 }
+        : prev
+    );
+  }
+
   const totalPages = data?.total_pages ?? 1;
 
   return (
@@ -67,9 +81,23 @@ export default function Jobs() {
       <Navbar />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-          Explore The Jobs
-        </h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Explore The Jobs
+          </h1>
+          {canManage && (
+            <Link
+              to="/jobs/new"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-teal-600 hover:bg-teal-700 text-white transition-colors"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Post Job
+            </Link>
+          )}
+        </div>
 
         {/* Filter bar */}
         <form onSubmit={handleSearch} className="mb-6 space-y-3">
@@ -144,7 +172,12 @@ export default function Jobs() {
         ) : data && data.jobs.length > 0 ? (
           <div className="space-y-4">
             {data.jobs.map((job) => (
-              <JobCard key={job.id} job={job} />
+              <JobCard
+                key={job.id}
+                job={job}
+                canManage={canManage}
+                onDeleted={handleJobDeleted}
+              />
             ))}
           </div>
         ) : (

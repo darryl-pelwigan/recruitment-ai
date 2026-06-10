@@ -26,15 +26,10 @@ export const jobSchema = z
     employment_type: z
       .enum(["Full-time", "Part-time", "Contract", "Remote", ""])
       .optional(),
-    salary_min: z.preprocess(
-      (v) => (v === "" || v == null ? undefined : Number(v)),
-      z.number().positive("Must be a positive number").optional()
-    ),
-    salary_max: z.preprocess(
-      (v) => (v === "" || v == null ? undefined : Number(v)),
-      z.number().positive("Must be a positive number").optional()
-    ),
-    status: z.enum(["open", "closed"]).default("open"),
+    // salary uses setValueAs in register() — values arrive as number | undefined, never strings
+    salary_min: z.number().positive("Must be a positive number").optional(),
+    salary_max: z.number().positive("Must be a positive number").optional(),
+    status: z.enum(["open", "closed"]),
   })
   .refine(
     (d) =>

@@ -8,9 +8,9 @@ from app.core.security import get_current_user, require_roles
 from app.schemas.job_schema import JobCreate, JobListResponse, JobResponse, JobUpdate
 from app.services.job_service import (
     create_job,
-    delete_job,
     get_job_by_id,
     get_jobs,
+    soft_delete_job,
     update_job,
 )
 
@@ -74,5 +74,5 @@ def delete(
     db: Annotated[Session, Depends(get_db)],
     _: Annotated[object, Depends(DELETE_ROLES)],
 ):
-    if not delete_job(db, job_id):
+    if not soft_delete_job(db, job_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")

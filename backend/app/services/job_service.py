@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
@@ -14,7 +16,7 @@ def get_jobs(
     location: str | None = None,
     status: str | None = None,
 ):
-    query = db.query(Job)
+    query = db.query(Job).filter(Job.deleted_at == None)  # noqa: E711
 
     if search:
         query = query.filter(
@@ -51,11 +53,15 @@ def get_jobs(
     }
 
 
-def get_job_by_id(db: Session, job_id: int):
-    return db.query(Job).filter(Job.id == job_id).first()
+def get_job_by_id(db: Session, job_id: int) -> Job | None:
+    return (
+        db.query(Job)
+        .filter(Job.id == job_id, Job.deleted_at == None)  # noqa: E711
+        .first()
+    )
 
 
-def create_job(db: Session, data: JobCreate, posted_by_id: int):
+def create_job(db: Session, data: JobCreate, posted_by_id: int) -> Job:
     job = Job(**data.model_dump(), posted_by_id=posted_by_id)
     db.add(job)
     db.commit()
@@ -63,7 +69,7 @@ def create_job(db: Session, data: JobCreate, posted_by_id: int):
     return job
 
 
-def update_job(db: Session, job_id: int, data: JobUpdate):
+def update_job(db: Session, job_id: int, data: JobUpdate) -> Job | None:
     job = get_job_by_id(db, job_id)
     if not job:
         return None
@@ -74,10 +80,10 @@ def update_job(db: Session, job_id: int, data: JobUpdate):
     return job
 
 
-def delete_job(db: Session, job_id: int) -> bool:
+def soft_delete_job(db: Session, job_id: int) -> bool:
     job = get_job_by_id(db, job_id)
     if not job:
         return False
-    db.delete(job)
+    job.deleted_at = datetime.now(timezone.utc)
     db.commit()
     return True

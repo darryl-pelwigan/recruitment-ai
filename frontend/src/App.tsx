@@ -7,6 +7,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Jobs from "./pages/Jobs";
 import PostJob from "./pages/PostJob";
+import EditJob from "./pages/EditJob";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
@@ -46,6 +47,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <PostJob />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs/:id/edit"
+          element={
+            <ProtectedRoute>
+              <EditJob />
             </ProtectedRoute>
           }
         />
