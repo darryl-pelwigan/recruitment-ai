@@ -18,16 +18,19 @@ interface AuthState {
   logout: () => void;
 }
 
+const storedUser = localStorage.getItem("user");
+
 export const useAuthStore = create<AuthState>((set) => ({
   token: localStorage.getItem("token"),
-  user: null,
+  user: storedUser ? JSON.parse(storedUser) : null,
   isAuthenticated: !!localStorage.getItem("token"),
 
   login: async (email, password) => {
     const res = await api.post("/auth/login", { email, password });
-    const { access_token } = res.data;
+    const { access_token, user } = res.data;
     localStorage.setItem("token", access_token);
-    set({ token: access_token, isAuthenticated: true });
+    localStorage.setItem("user", JSON.stringify(user));
+    set({ token: access_token, user, isAuthenticated: true });
   },
 
   register: async (full_name, email, password, role) => {
@@ -36,6 +39,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     set({ token: null, user: null, isAuthenticated: false });
   },
 }));

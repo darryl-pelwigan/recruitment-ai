@@ -4,23 +4,9 @@ import { useThemeStore } from "./store/themeStore";
 import { useAuthStore } from "./store/authStore";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-
-function Dashboard() {
-  const { logout } = useAuthStore();
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-950 transition-colors duration-200">
-      <div className="text-center">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Dashboard</h1>
-        <button
-          onClick={logout}
-          className="px-4 py-2 rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium hover:bg-gray-700 dark:hover:bg-gray-100 transition-colors"
-        >
-          Logout
-        </button>
-      </div>
-    </div>
-  );
-}
+import Dashboard from "./pages/Dashboard";
+import Jobs from "./pages/Jobs";
+import PostJob from "./pages/PostJob";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
@@ -44,6 +30,22 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs"
+          element={
+            <ProtectedRoute>
+              <Jobs />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs/new"
+          element={
+            <ProtectedRoute>
+              <PostJob />
             </ProtectedRoute>
           }
         />

@@ -16,5 +16,34 @@ export const registerSchema = z.object({
   role: z.enum(["applicant", "recruiter"]),
 });
 
+export const jobSchema = z
+  .object({
+    title: z.string().min(1, "Title is required"),
+    description: z.string().optional(),
+    requirements: z.string().optional(),
+    skills_required: z.string().optional(),
+    location: z.string().optional(),
+    employment_type: z
+      .enum(["Full-time", "Part-time", "Contract", "Remote", ""])
+      .optional(),
+    salary_min: z.preprocess(
+      (v) => (v === "" || v == null ? undefined : Number(v)),
+      z.number().positive("Must be a positive number").optional()
+    ),
+    salary_max: z.preprocess(
+      (v) => (v === "" || v == null ? undefined : Number(v)),
+      z.number().positive("Must be a positive number").optional()
+    ),
+    status: z.enum(["open", "closed"]).default("open"),
+  })
+  .refine(
+    (d) =>
+      d.salary_min == null ||
+      d.salary_max == null ||
+      d.salary_max >= d.salary_min,
+    { message: "Max salary must be ≥ min salary", path: ["salary_max"] }
+  );
+
 export type LoginData = z.infer<typeof loginSchema>;
 export type RegisterData = z.infer<typeof registerSchema>;
+export type JobData = z.infer<typeof jobSchema>;
