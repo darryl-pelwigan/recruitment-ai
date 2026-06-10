@@ -1,33 +1,44 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import ThemeToggle from "../components/ThemeToggle";
 import BrandLogo from "../components/BrandLogo";
+import { registerSchema, type RegisterData } from "../lib/schemas";
+
+function inputClass(hasError: boolean) {
+  return (
+    "w-full px-4 py-2.5 rounded-lg border text-sm bg-white dark:bg-gray-800 " +
+    "text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 " +
+    "focus:outline-none focus:ring-2 focus:border-transparent transition-colors " +
+    (hasError
+      ? "border-red-400 dark:border-red-500 focus:ring-red-400"
+      : "border-gray-200 dark:border-gray-700 focus:ring-gray-900 dark:focus:ring-white")
+  );
+}
 
 export default function Register() {
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("applicant");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { register } = useAuthStore();
+  const [serverError, setServerError] = useState("");
+  const { register: signUp } = useAuthStore();
   const navigate = useNavigate();
 
-  async function handleSubmit(e: { preventDefault(): void }) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterData>({ resolver: zodResolver(registerSchema) });
+
+  async function onSubmit(data: RegisterData) {
+    setServerError("");
     try {
-      await register(fullName, email, password, role);
+      await signUp(data.full_name, data.email, data.password, data.role);
       navigate("/login");
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         "Registration failed. Please try again.";
-      setError(message);
-    } finally {
-      setLoading(false);
+      setServerError(message);
     }
   }
 
@@ -45,64 +56,69 @@ export default function Register() {
           </h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <input
+              {...register("full_name")}
               type="text"
               placeholder="Full Name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
               autoComplete="name"
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white focus:border-transparent transition-colors"
+              className={inputClass(!!errors.full_name)}
             />
+            {errors.full_name && (
+              <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.full_name.message}</p>
+            )}
           </div>
 
           <div>
             <input
+              {...register("email")}
               type="email"
               placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
               autoComplete="email"
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white focus:border-transparent transition-colors"
+              className={inputClass(!!errors.email)}
             />
+            {errors.email && (
+              <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.email.message}</p>
+            )}
           </div>
 
           <div>
             <input
+              {...register("password")}
               type="password"
               placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
               autoComplete="new-password"
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white focus:border-transparent transition-colors"
+              className={inputClass(!!errors.password)}
             />
+            {errors.password && (
+              <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.password.message}</p>
+            )}
           </div>
 
           <div>
             <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white focus:border-transparent transition-colors appearance-none cursor-pointer"
+              {...register("role")}
+              className={inputClass(!!errors.role) + " appearance-none cursor-pointer"}
             >
               <option value="applicant">Applicant</option>
               <option value="recruiter">Recruiter</option>
             </select>
+            {errors.role && (
+              <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.role.message}</p>
+            )}
           </div>
 
-          {error && (
-            <p className="text-sm text-red-500 dark:text-red-400 text-center">{error}</p>
+          {serverError && (
+            <p className="text-sm text-red-500 dark:text-red-400 text-center">{serverError}</p>
           )}
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="w-full py-2.5 rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-semibold text-sm hover:bg-gray-700 dark:hover:bg-gray-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {loading ? "Creating account…" : "Create Account"}
+            {isSubmitting ? "Creating account…" : "Create Account"}
           </button>
         </form>
 

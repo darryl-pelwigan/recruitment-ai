@@ -1,31 +1,44 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import ThemeToggle from "../components/ThemeToggle";
 import BrandLogo from "../components/BrandLogo";
+import { loginSchema, type LoginData } from "../lib/schemas";
+
+function inputClass(hasError: boolean) {
+  return (
+    "w-full px-4 py-2.5 rounded-lg border text-sm bg-white dark:bg-gray-800 " +
+    "text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 " +
+    "focus:outline-none focus:ring-2 focus:border-transparent transition-colors " +
+    (hasError
+      ? "border-red-400 dark:border-red-500 focus:ring-red-400"
+      : "border-gray-200 dark:border-gray-700 focus:ring-gray-900 dark:focus:ring-white")
+  );
+}
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState("");
   const { login } = useAuthStore();
   const navigate = useNavigate();
 
-  async function handleSubmit(e: { preventDefault(): void }) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginData>({ resolver: zodResolver(loginSchema) });
+
+  async function onSubmit(data: LoginData) {
+    setServerError("");
     try {
-      await login(email, password);
+      await login(data.email, data.password);
       navigate("/dashboard");
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         "Invalid email or password.";
-      setError(message);
-    } finally {
-      setLoading(false);
+      setServerError(message);
     }
   }
 
@@ -43,41 +56,43 @@ export default function Login() {
           </h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <input
+              {...register("email")}
               type="email"
               placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
               autoComplete="email"
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white focus:border-transparent transition-colors"
+              className={inputClass(!!errors.email)}
             />
+            {errors.email && (
+              <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.email.message}</p>
+            )}
           </div>
 
           <div>
             <input
+              {...register("password")}
               type="password"
               placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
               autoComplete="current-password"
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white focus:border-transparent transition-colors"
+              className={inputClass(!!errors.password)}
             />
+            {errors.password && (
+              <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.password.message}</p>
+            )}
           </div>
 
-          {error && (
-            <p className="text-sm text-red-500 dark:text-red-400 text-center">{error}</p>
+          {serverError && (
+            <p className="text-sm text-red-500 dark:text-red-400 text-center">{serverError}</p>
           )}
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="w-full py-2.5 rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-semibold text-sm hover:bg-gray-700 dark:hover:bg-gray-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {loading ? "Signing in…" : "Login"}
+            {isSubmitting ? "Signing in…" : "Login"}
           </button>
         </form>
 
