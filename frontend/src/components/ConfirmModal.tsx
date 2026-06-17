@@ -8,9 +8,19 @@ interface Props {
   onConfirm: () => void;
   onCancel: () => void;
   loading?: boolean;
+  variant?: "danger" | "warning";
 }
 
-export default function ConfirmModal({ open, title, message, confirmLabel = "Delete", onConfirm, onCancel, loading = false }: Props) {
+export default function ConfirmModal({
+  open,
+  title,
+  message,
+  confirmLabel = "Confirm",
+  onConfirm,
+  onCancel,
+  loading = false,
+  variant = "danger",
+}: Props) {
   useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
@@ -22,19 +32,36 @@ export default function ConfirmModal({ open, title, message, confirmLabel = "Del
 
   if (!open) return null;
 
+  const iconBg = variant === "danger"
+    ? "bg-red-50 dark:bg-red-900/30"
+    : "bg-amber-50 dark:bg-amber-900/30";
+  const iconColor = variant === "danger"
+    ? "text-red-600 dark:text-red-400"
+    : "text-amber-600 dark:text-amber-400";
+  const btnClass = variant === "danger"
+    ? "bg-red-600 hover:bg-red-700"
+    : "bg-amber-500 hover:bg-amber-600";
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
       <div className="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-6">
         <div className="flex items-start gap-4">
-          <div className="shrink-0 w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-600 dark:text-red-400">
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-              <path d="M10 11v6" />
-              <path d="M14 11v6" />
-              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-            </svg>
+          <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${iconBg}`}>
+            {variant === "danger" ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconColor}>
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6" /><path d="M14 11v6" />
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconColor}>
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h2>
@@ -53,7 +80,7 @@ export default function ConfirmModal({ open, title, message, confirmLabel = "Del
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="px-4 py-2 text-sm font-medium rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+            className={`px-4 py-2 text-sm font-medium rounded-xl text-white transition-colors disabled:opacity-50 inline-flex items-center gap-2 ${btnClass}`}
           >
             {loading && (
               <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -30,6 +30,7 @@ export default function Jobs() {
   const [searchInput, setSearchInput] = useState("");
   const [locationInput, setLocationInput] = useState("");
   const [myListings, setMyListings] = useState(canManage);
+  const [statusFilter, setStatusFilter] = useState<"" | "open" | "closed">(canManage ? "" : "open");
   const [savedJobIds, setSavedJobIds] = useState<Set<number>>(new Set());
   const [appliedJobIds, setAppliedJobIds] = useState<Set<number>>(new Set());
 
@@ -63,12 +64,13 @@ export default function Jobs() {
     employmentTypes.forEach((t) => params.append("employment_type", t));
     if (location) params.set("location", location);
     if (canManage && myListings && user?.id) params.set("posted_by_id", String(user.id));
+    if (statusFilter) params.set("status", statusFilter);
 
     api
       .get<JobListResponse>(`/jobs/?${params.toString()}`)
       .then((res) => setData(res.data))
       .finally(() => setLoading(false));
-  }, [page, search, employmentTypes, location, myListings, canManage, user?.id]);
+  }, [page, search, employmentTypes, location, myListings, statusFilter, canManage, user?.id]);
 
   function handleSearch(e: { preventDefault(): void }) {
     e.preventDefault();
@@ -91,6 +93,17 @@ export default function Jobs() {
     setLocation("");
     setEmploymentTypes([]);
     setPage(1);
+  }
+
+  function handleJobStatusChanged(id: number, newStatus: string) {
+    setData((prev) => {
+      if (!prev) return prev;
+      // If a specific status filter is active and new status doesn't match, remove from list
+      if (statusFilter && statusFilter !== newStatus) {
+        return { ...prev, jobs: prev.jobs.filter((j) => j.id !== id), total: prev.total - 1 };
+      }
+      return { ...prev, jobs: prev.jobs.map((j) => (j.id === id ? { ...j, status: newStatus } : j)) };
+    });
   }
 
   function handleListingsToggle(mine: boolean) {
@@ -118,11 +131,18 @@ export default function Jobs() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {canManage && myListings ? "My Job Listings" : "Explore The Jobs"}
+              {canManage
+                ? statusFilter === "closed"
+                  ? myListings ? "My Closed Jobs" : "Closed Jobs"
+                  : myListings ? "My Job Listings" : "All Job Listings"
+                : "Explore The Jobs"}
             </h1>
             {data && (
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {data.total} {data.total === 1 ? "position" : "positions"} {canManage && myListings ? "posted" : "available"}
+                {data.total} {data.total === 1 ? "position" : "positions"}{" "}
+                {canManage
+                  ? statusFilter === "closed" ? "closed" : statusFilter === "open" ? "open" : "total"
+                  : "available"}
               </p>
             )}
           </div>
@@ -182,7 +202,8 @@ export default function Jobs() {
               {/* My Listings / All Jobs toggle — managers only, styled as a tab group */}
               {canManage && (
                 <>
-                  <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mr-1">
+                  {/* Mine / All listings toggle */}
+                  <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <button
                       type="button"
                       onClick={() => handleListingsToggle(true)}
@@ -206,6 +227,27 @@ export default function Jobs() {
                       All
                     </button>
                   </div>
+
+                  {/* Status filter: Open / All / Closed */}
+                  <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    {(["open", "", "closed"] as const).map((s, i) => (
+                      <button
+                        key={s === "" ? "all" : s}
+                        type="button"
+                        onClick={() => { setStatusFilter(s); setPage(1); }}
+                        className={`px-3 py-1 text-xs font-medium transition-colors ${i > 0 ? "border-l border-gray-200 dark:border-gray-700" : ""} ${
+                          statusFilter === s
+                            ? s === "closed"
+                              ? "bg-gray-500 text-white"
+                              : "bg-teal-600 text-white"
+                            : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        }`}
+                      >
+                        {s === "" ? "All" : s === "open" ? "Open" : "Closed"}
+                      </button>
+                    ))}
+                  </div>
+
                   <div className="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-0.5" />
                 </>
               )}
@@ -261,6 +303,7 @@ export default function Jobs() {
                 job={job}
                 canManage={canManage}
                 onDeleted={handleJobDeleted}
+                onStatusChanged={handleJobStatusChanged}
                 saved={savedJobIds.has(job.id)}
                 onSavedChange={handleSavedChange}
                 applied={appliedJobIds.has(job.id)}

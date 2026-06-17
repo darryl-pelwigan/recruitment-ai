@@ -43,12 +43,13 @@ interface Props {
   job: Job;
   canManage?: boolean;
   onDeleted?: (id: number) => void;
+  onStatusChanged?: (id: number, newStatus: string) => void;
   saved?: boolean;
   onSavedChange?: (jobId: number, saved: boolean) => void;
   applied?: boolean;
 }
 
-export default function JobCard({ job, canManage = false, onDeleted, saved = false, onSavedChange, applied = false }: Props) {
+export default function JobCard({ job, canManage = false, onDeleted, onStatusChanged, saved = false, onSavedChange, applied = false }: Props) {
   const { isAuthenticated, user } = useAuthStore();
   const salary = formatSalary(job.salary_min, job.salary_max, job.salary_currency);
   const navigate = useNavigate();
@@ -56,6 +57,8 @@ export default function JobCard({ job, canManage = false, onDeleted, saved = fal
   const [bookmarking, setBookmarking] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
+  const [toggling, setToggling] = useState(false);
 
   const canEdit =
     canManage &&
@@ -76,6 +79,19 @@ export default function JobCard({ job, canManage = false, onDeleted, saved = fal
       // ignore — modal stays open so user can retry
     } finally {
       setDeleting(false);
+    }
+  }
+
+  async function handleToggleStatus(newStatus: "open" | "closed") {
+    setToggling(true);
+    try {
+      const res = await api.put(`/jobs/${job.id}`, { status: newStatus });
+      setCloseConfirmOpen(false);
+      onStatusChanged?.(job.id, res.data.status);
+    } catch {
+      // ignore
+    } finally {
+      setToggling(false);
     }
   }
 
@@ -148,6 +164,14 @@ export default function JobCard({ job, canManage = false, onDeleted, saved = fal
             >
               {job.title}
             </Link>
+            {canManage && job.status === "closed" && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                </svg>
+                Closed
+              </span>
+            )}
             {applied && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-800">
                 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -246,6 +270,24 @@ export default function JobCard({ job, canManage = false, onDeleted, saved = fal
                     Edit
                   </button>
                 )}
+                {canEdit && job.status === "open" && (
+                  <button
+                    onClick={() => setCloseConfirmOpen(true)}
+                    disabled={toggling}
+                    className="px-3 py-1 text-xs font-medium rounded-lg border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors disabled:opacity-50"
+                  >
+                    Close
+                  </button>
+                )}
+                {canEdit && job.status === "closed" && (
+                  <button
+                    onClick={() => handleToggleStatus("open")}
+                    disabled={toggling}
+                    className="px-3 py-1 text-xs font-medium rounded-lg border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors disabled:opacity-50"
+                  >
+                    {toggling ? "..." : "Reopen"}
+                  </button>
+                )}
                 {canDelete && (
                   <button
                     onClick={() => setConfirmOpen(true)}
@@ -261,10 +303,21 @@ export default function JobCard({ job, canManage = false, onDeleted, saved = fal
 
       </div>
       <ConfirmModal
+        open={closeConfirmOpen}
+        title="Close Job Listing"
+        message={`Close "${job.title}"? New applications will be paused. You can reopen it anytime.`}
+        confirmLabel="Close Job"
+        variant="warning"
+        loading={toggling}
+        onConfirm={() => handleToggleStatus("closed")}
+        onCancel={() => setCloseConfirmOpen(false)}
+      />
+      <ConfirmModal
         open={confirmOpen}
         title="Delete Job Listing"
         message={`Are you sure you want to delete "${job.title}"? This cannot be undone.`}
         confirmLabel="Delete"
+        variant="danger"
         loading={deleting}
         onConfirm={handleDelete}
         onCancel={() => setConfirmOpen(false)}
