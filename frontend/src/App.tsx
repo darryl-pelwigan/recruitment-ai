@@ -10,6 +10,8 @@ import PostJob from "./pages/PostJob";
 import EditJob from "./pages/EditJob";
 import JobDetail from "./pages/JobDetail";
 import Profile from "./pages/Profile";
+import MyApplications from "./pages/MyApplications";
+import Applicants from "./pages/Applicants";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
@@ -61,6 +63,22 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-applications"
+          element={
+            <ProtectedRoute>
+              <MyApplications />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs/:id/applicants"
+          element={
+            <ProtectedRoute>
+              <Applicants />
             </ProtectedRoute>
           }
         />

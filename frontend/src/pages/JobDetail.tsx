@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { api } from "../api/api";
 import Navbar from "../components/Navbar";
@@ -56,6 +56,14 @@ export default function JobDetail() {
   const canManage = user && ["admin", "hr", "recruiter"].includes(user.role);
   const salary = job ? formatSalary(job.salary_min, job.salary_max, job.salary_currency) : null;
 
+  const [hasApplied, setHasApplied] = useState(false);
+  const [applyOpen, setApplyOpen] = useState(false);
+  const [coverLetter, setCoverLetter] = useState("");
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [applying, setApplying] = useState(false);
+  const [applyError, setApplyError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     api
       .get(`/jobs/${id}`)
@@ -63,6 +71,40 @@ export default function JobDetail() {
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (isAuthenticated && job) {
+      api
+        .get("/applications/me")
+        .then((res) => {
+          const apps = res.data.applications as { job_id: number }[];
+          setHasApplied(apps.some((a) => a.job_id === job.id));
+        })
+        .catch(() => {});
+    }
+  }, [job, isAuthenticated]);
+
+  async function handleApply() {
+    setApplying(true);
+    setApplyError(null);
+    try {
+      const form = new FormData();
+      if (coverLetter.trim()) form.append("cover_letter", coverLetter.trim());
+      if (resumeFile) form.append("resume", resumeFile);
+      await api.post(`/applications/${job!.id}`, form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setHasApplied(true);
+      setApplyOpen(false);
+      setCoverLetter("");
+      setResumeFile(null);
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setApplyError(detail ?? "Something went wrong. Please try again.");
+    } finally {
+      setApplying(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -184,12 +226,20 @@ export default function JobDetail() {
           </div>
 
           {canManage && (
-            <button
-              onClick={() => navigate(`/jobs/${job.id}/edit`)}
-              className="px-4 py-2 text-sm font-medium rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            >
-              Edit Job
-            </button>
+            <div className="flex items-center gap-2">
+              <Link
+                to={`/jobs/${job.id}/applicants`}
+                className="px-4 py-2 text-sm font-medium rounded-xl border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors"
+              >
+                View Applicants
+              </Link>
+              <button
+                onClick={() => navigate(`/jobs/${job.id}/edit`)}
+                className="px-4 py-2 text-sm font-medium rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                Edit Job
+              </button>
+            </div>
           )}
         </div>
 
@@ -292,9 +342,18 @@ export default function JobDetail() {
                     Position Closed
                   </div>
                 ) : isAuthenticated ? (
-                  <button className="w-full py-2.5 text-sm font-medium rounded-xl bg-teal-600 hover:bg-teal-700 text-white transition-colors">
-                    Apply Now
-                  </button>
+                  hasApplied ? (
+                    <div className="w-full py-2.5 text-center text-sm font-medium rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                      Application Submitted
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => { setApplyOpen(true); setApplyError(null); }}
+                      className="w-full py-2.5 text-sm font-medium rounded-xl bg-teal-600 hover:bg-teal-700 text-white transition-colors"
+                    >
+                      Apply Now
+                    </button>
+                  )
                 ) : (
                   <Link
                     to={`/login?redirect=/jobs/${job.id}`}
@@ -318,6 +377,103 @@ export default function JobDetail() {
           </div>
         </div>
       </main>
+
+      {/* Apply modal */}
+      {applyOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-2xl">
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-800">
+              <div>
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+                  Apply for {job.title}
+                </h2>
+                {job.company_name && isAuthenticated && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{job.company_name}</p>
+                )}
+              </div>
+              <button
+                onClick={() => setApplyOpen(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="px-6 py-5 space-y-5">
+              {/* Cover letter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Cover Letter <span className="text-gray-400 font-normal">(optional)</span>
+                </label>
+                <textarea
+                  rows={8}
+                  value={coverLetter}
+                  onChange={(e) => setCoverLetter(e.target.value)}
+                  placeholder="Tell the recruiter why you're a great fit for this role..."
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm text-gray-900 dark:text-white px-3.5 py-2.5 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-y min-h-30"
+                />
+              </div>
+
+              {/* Resume upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Resume <span className="text-gray-400 font-normal">(PDF, max 5 MB, optional)</span>
+                </label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  className="hidden"
+                  onChange={(e) => setResumeFile(e.target.files?.[0] ?? null)}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full py-2.5 px-4 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400 hover:border-teal-400 dark:hover:border-teal-600 hover:text-teal-600 dark:hover:text-teal-400 transition-colors flex items-center justify-center gap-2"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  {resumeFile ? resumeFile.name : "Upload PDF resume"}
+                </button>
+                {resumeFile && (
+                  <button
+                    type="button"
+                    onClick={() => { setResumeFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                    className="mt-1 text-xs text-red-500 hover:underline"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+
+              {applyError && (
+                <p className="text-xs text-red-500 dark:text-red-400">{applyError}</p>
+              )}
+            </div>
+
+            <div className="px-6 pb-6 flex gap-3">
+              <button
+                onClick={() => setApplyOpen(false)}
+                className="flex-1 py-2.5 text-sm font-medium rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleApply}
+                disabled={applying}
+                className="flex-1 py-2.5 text-sm font-medium rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-60 text-white transition-colors"
+              >
+                {applying ? "Submitting…" : "Submit Application"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
