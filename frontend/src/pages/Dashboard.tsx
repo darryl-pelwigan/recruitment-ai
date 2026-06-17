@@ -48,8 +48,8 @@ export default function Dashboard() {
           </div>
           <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
             <p className="text-sm text-gray-500 dark:text-gray-400">Your Role</p>
-            <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white capitalize">
-              {user?.role ?? "—"}
+            <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
+              {({ hr: "HR", admin: "Admin", recruiter: "Recruiter" } as Record<string, string>)[user?.role ?? ""] ?? user?.role ?? "—"}
             </p>
           </div>
         </div>

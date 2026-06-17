@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api/api";
+import { useAuthStore } from "../store/authStore";
 
 export interface Job {
   id: number;
@@ -41,6 +42,7 @@ interface Props {
 }
 
 export default function JobCard({ job, canManage = false, onDeleted }: Props) {
+  const { isAuthenticated } = useAuthStore();
   const salary = formatSalary(job.salary_min, job.salary_max);
   const navigate = useNavigate();
   const plainDescription = job.description ? stripHtml(job.description) : null;
@@ -125,7 +127,7 @@ export default function JobCard({ job, canManage = false, onDeleted }: Props) {
               </svg>
               {formatDate(job.created_at)}
             </div>
-            {salary && (
+            {isAuthenticated && salary && (
               <div className="flex items-center justify-end gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="1" x2="12" y2="23" />
@@ -133,6 +135,14 @@ export default function JobCard({ job, canManage = false, onDeleted }: Props) {
                 </svg>
                 {salary}
               </div>
+            )}
+            {!isAuthenticated && (job.salary_min || job.salary_max) && (
+              <Link
+                to="/login"
+                className="text-xs text-teal-600 dark:text-teal-400 hover:underline"
+              >
+                Login to view salary
+              </Link>
             )}
           </div>
 

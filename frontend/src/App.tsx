@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Jobs from "./pages/Jobs";
 import PostJob from "./pages/PostJob";
 import EditJob from "./pages/EditJob";
+import JobDetail from "./pages/JobDetail";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
@@ -34,14 +35,8 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/jobs"
-          element={
-            <ProtectedRoute>
-              <Jobs />
-            </ProtectedRoute>
-          }
-        />
+        {/* public — guests can browse and view, but not apply or see salary */}
+        <Route path="/jobs" element={<Jobs />} />
         <Route
           path="/jobs/new"
           element={
@@ -50,6 +45,8 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        {/* public — must come after /jobs/new so "new" isn't treated as an id */}
+        <Route path="/jobs/:id" element={<JobDetail />} />
         <Route
           path="/jobs/:id/edit"
           element={
@@ -58,7 +55,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/jobs" replace />} />
       </Routes>
     </BrowserRouter>
   );

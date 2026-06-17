@@ -68,7 +68,7 @@ export default function PostJob() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
       <Navbar />
 
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <Link
             to="/jobs"
@@ -84,7 +84,7 @@ export default function PostJob() {
           </h1>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+        <div className="max-w-3xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
             <Field label="Job Title *" error={errors.title?.message}>

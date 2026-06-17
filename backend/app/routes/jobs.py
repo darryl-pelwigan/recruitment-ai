@@ -23,7 +23,6 @@ DELETE_ROLES = require_roles("admin", "hr")
 @router.get("/", response_model=JobListResponse)
 def list_jobs(
     db: Annotated[Session, Depends(get_db)],
-    _: Annotated[object, Depends(get_current_user)],
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=50),
     search: Optional[str] = Query(None),
@@ -38,7 +37,6 @@ def list_jobs(
 def get_job(
     job_id: int,
     db: Annotated[Session, Depends(get_db)],
-    _: Annotated[object, Depends(get_current_user)],
 ):
     job = get_job_by_id(db, job_id)
     if not job:
