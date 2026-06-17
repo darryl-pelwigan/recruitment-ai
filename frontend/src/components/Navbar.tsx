@@ -238,7 +238,7 @@ export default function Navbar() {
                 </button>
 
                 {notifOpen && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl z-50 overflow-hidden">
+                  <div className="absolute right-0 mt-2 w-[min(320px,calc(100vw-1rem))] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl z-50 overflow-hidden">
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
                       <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Notifications</h3>

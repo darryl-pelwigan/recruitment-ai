@@ -82,7 +82,7 @@ function PreviewModal({
       onClick={onClose}
     >
       <div
-        className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col overflow-hidden"
+        className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col overflow-hidden mx-2 sm:mx-4"
         style={{ maxHeight: "90vh" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -215,7 +215,7 @@ export default function Resumes() {
           </h2>
           <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
             {profileResumeUrl ? (
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
                   <PdfIcon className="text-red-600 dark:text-red-400" />
                 </div>
@@ -227,7 +227,7 @@ export default function Resumes() {
                     PDF · auto-linked when you apply for jobs
                   </p>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
                   <button
                     onClick={() => openPreview(profileResumeUrl, "Profile Resume")}
                     className="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"

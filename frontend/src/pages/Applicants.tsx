@@ -138,7 +138,7 @@ export default function Applicants() {
           Back to Job
         </button>
 
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Applicants</h1>
             {jobTitle && (
@@ -146,7 +146,7 @@ export default function Applicants() {
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={handleRescoreAll}
               disabled={rescoring || applications.length === 0}
@@ -207,7 +207,7 @@ export default function Applicants() {
                 key={app.id}
                 className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5"
               >
-                <div className="flex flex-wrap items-start gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
                   {/* Avatar */}
                   <Link to={`/applicants/${app.user.id}`} className="w-10 h-10 rounded-full overflow-hidden bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center shrink-0 hover:ring-2 hover:ring-teal-400 transition-all">
                     {app.user.avatar_url ? (
@@ -251,7 +251,7 @@ export default function Applicants() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
                     {app.resume_url && (
                       <a
                         href={`${API_BASE}${app.resume_url}`}

@@ -125,7 +125,7 @@ export default function ApplicantProfile() {
 
         {/* Header card */}
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 mb-5">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div className="flex items-start gap-4">
               <div className="w-16 h-16 rounded-full overflow-hidden bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center shrink-0">
                 {avatarSrc ? (
@@ -154,7 +154,7 @@ export default function ApplicantProfile() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
               {resumeSrc && (
                 <a
                   href={resumeSrc}

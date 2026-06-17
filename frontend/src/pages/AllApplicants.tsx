@@ -40,6 +40,14 @@ const STATUS_OPTIONS = [
   { value: "hired", label: "Hired" },
 ];
 
+const LAST_SEEN_OPTIONS = [
+  { value: "1d", label: "Active (1 day)", ms: 1 * 24 * 60 * 60 * 1000 },
+  { value: "1w", label: "1 week", ms: 7 * 24 * 60 * 60 * 1000 },
+  { value: "1m", label: "1 month", ms: 30 * 24 * 60 * 60 * 1000 },
+  { value: "2m", label: "2 months", ms: 60 * 24 * 60 * 60 * 1000 },
+  { value: "3m", label: "3 months", ms: 90 * 24 * 60 * 60 * 1000 },
+];
+
 function initials(name: string) {
   return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 }
@@ -83,6 +91,7 @@ export default function AllApplicants() {
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [bookmarkedOnly, setBookmarkedOnly] = useState(false);
+  const [lastSeenFilter, setLastSeenFilter] = useState("");
 
   // Job-scoped application data (loaded when a job is selected)
   const [jobApplications, setJobApplications] = useState<JobApplication[] | null>(null);
@@ -138,6 +147,7 @@ export default function AllApplicants() {
     handleJobFilter(null);
     setSelectedStatus("");
     setBookmarkedOnly(false);
+    setLastSeenFilter("");
   }
 
   async function toggleBookmark(e: React.MouseEvent, applicantId: number) {
@@ -169,6 +179,7 @@ export default function AllApplicants() {
 
   // Apply all filters
   const filtered = useMemo(() => {
+    const lastSeenMs = LAST_SEEN_OPTIONS.find((o) => o.value === lastSeenFilter)?.ms ?? null;
     return applicants.filter((a) => {
       // Search
       if (search.trim()) {
@@ -190,11 +201,16 @@ export default function AllApplicants() {
       }
       // Bookmarked only
       if (bookmarkedOnly && !savedIds.has(a.id)) return false;
+      // Last seen filter
+      if (lastSeenMs !== null) {
+        if (!a.last_login) return false;
+        if (Date.now() - new Date(a.last_login).getTime() > lastSeenMs) return false;
+      }
       return true;
     });
-  }, [applicants, search, selectedSkills, jobApplications, selectedStatus, bookmarkedOnly, savedIds]);
+  }, [applicants, search, selectedSkills, jobApplications, selectedStatus, bookmarkedOnly, savedIds, lastSeenFilter]);
 
-  const hasActiveFilter = search || selectedSkills.size > 0 || selectedJobId || bookmarkedOnly;
+  const hasActiveFilter = search || selectedSkills.size > 0 || selectedJobId || bookmarkedOnly || lastSeenFilter;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
@@ -224,14 +240,14 @@ export default function AllApplicants() {
               />
             </div>
 
-            {/* Compact controls group — stays on one line */}
-            <div className="flex items-center gap-2 shrink-0">
+            {/* Compact controls group — wraps on mobile */}
+            <div className="flex flex-wrap items-center gap-2">
               {/* Job filter */}
-              <div className="relative">
+              <div className="relative flex-1 min-w-[130px]">
                 <select
                   value={selectedJobId ?? ""}
                   onChange={(e) => handleJobFilter(e.target.value ? Number(e.target.value) : null)}
-                  className="appearance-none pl-3 pr-7 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors w-36"
+                  className="appearance-none w-full pl-3 pr-7 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors"
                 >
                   <option value="">All Jobs</option>
                   {jobs.map((j) => (
@@ -248,11 +264,11 @@ export default function AllApplicants() {
 
               {/* Status filter — only visible when a job is selected */}
               {selectedJobId && (
-                <div className="relative">
+                <div className="relative flex-1 min-w-[120px]">
                   <select
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="appearance-none pl-3 pr-7 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors w-32"
+                    className="appearance-none w-full pl-3 pr-7 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors"
                   >
                     <option value="">All Statuses</option>
                     {STATUS_OPTIONS.map((s) => (
@@ -264,6 +280,23 @@ export default function AllApplicants() {
                   </svg>
                 </div>
               )}
+
+              {/* Last seen filter */}
+              <div className="relative flex-1 min-w-[130px]">
+                <select
+                  value={lastSeenFilter}
+                  onChange={(e) => setLastSeenFilter(e.target.value)}
+                  className="appearance-none w-full pl-3 pr-7 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors"
+                >
+                  <option value="">Active Within</option>
+                  {LAST_SEEN_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+                <svg className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </div>
 
               {/* Bookmarked toggle */}
               <button

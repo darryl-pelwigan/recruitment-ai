@@ -182,7 +182,7 @@ export default function EditJob() {
                     ))}
                   </select>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Field label="" error={errors.salary_min?.message}>
                     <input
                       {...register("salary_min", {

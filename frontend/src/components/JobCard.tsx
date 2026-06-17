@@ -103,7 +103,7 @@ export default function JobCard({ job, canManage = false, onDeleted, saved = fal
 
   return (
     <div className="group bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 hover:border-teal-300 dark:hover:border-teal-700 hover:shadow-lg dark:hover:shadow-gray-900/60 transition-all duration-200">
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-3 sm:gap-4">
 
         {/* Left: company logo or default icon — auth only */}
         {isAuthenticated && (
@@ -208,7 +208,7 @@ export default function JobCard({ job, canManage = false, onDeleted, saved = fal
         </div>
 
         {/* Right: date + actions */}
-        <div className="shrink-0 flex flex-col items-end gap-3">
+        <div className="shrink-0 flex flex-col items-end gap-2 sm:gap-3">
           <div className="inline-flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />

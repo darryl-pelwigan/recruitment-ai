@@ -144,7 +144,7 @@ export default function Jobs() {
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 mb-6 shadow-sm">
           <form onSubmit={handleSearch}>
             {/* Row 1: search inputs */}
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <div className="flex-1 relative">
                 <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -166,12 +166,12 @@ export default function Jobs() {
                   placeholder="Location..."
                   value={locationInput}
                   onChange={(e) => setLocationInput(e.target.value)}
-                  className="pl-9 pr-3 py-2 w-40 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
+                  className="pl-9 pr-3 py-2 w-full sm:w-40 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
                 />
               </div>
               <button
                 type="submit"
-                className="px-5 py-2 text-sm font-medium rounded-xl bg-teal-600 hover:bg-teal-700 text-white transition-colors shrink-0"
+                className="w-full sm:w-auto px-5 py-2 text-sm font-medium rounded-xl bg-teal-600 hover:bg-teal-700 text-white transition-colors shrink-0"
               >
                 Search
               </button>

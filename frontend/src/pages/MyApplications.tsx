@@ -85,7 +85,7 @@ export default function MyApplications() {
                 key={app.id}
                 className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5"
               >
-                <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <Link
                       to={`/jobs/${app.job.id}`}
@@ -103,7 +103,7 @@ export default function MyApplications() {
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex flex-wrap items-center gap-3 sm:shrink-0">
                     {app.resume_url && (
                       <a
                         href={`${API_BASE}${app.resume_url}`}

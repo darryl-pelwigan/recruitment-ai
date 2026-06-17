@@ -100,7 +100,7 @@ export default function SavedApplicants() {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                         <div>
                           <p className="text-sm font-semibold text-gray-900 dark:text-white">{applicant.full_name}</p>
                           {applicant.headline && (
@@ -124,7 +124,7 @@ export default function SavedApplicants() {
                           )}
                         </div>
 
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex flex-wrap items-center gap-2 shrink-0">
                           {resumeSrc && (
                             <a
                               href={resumeSrc}

@@ -208,7 +208,7 @@ export default function Profile() {
         {/* Avatar card */}
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 mb-6">
           <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">Profile Picture</h2>
-          <div className="flex items-center gap-5">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
             <div className="relative shrink-0">
               <div className="w-20 h-20 rounded-full overflow-hidden bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center">
                 {avatarSrc ? (

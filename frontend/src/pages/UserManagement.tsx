@@ -114,8 +114,8 @@ export default function UserManagement() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 mb-6 flex flex-wrap gap-3">
-          <div className="flex-1 min-w-48 relative">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row gap-3">
+          <div className="flex-1 relative">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
@@ -155,7 +155,7 @@ export default function UserManagement() {
               const isSelf = u.id === currentUser?.id;
               return (
                 <div key={u.id} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl px-5 py-4">
-                  <div className="flex items-center gap-4 flex-wrap">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                     {/* Avatar */}
                     <div className="w-10 h-10 rounded-full overflow-hidden bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center shrink-0">
                       {avatarSrc ? (
@@ -180,7 +180,7 @@ export default function UserManagement() {
 
                     {/* Actions */}
                     {!isSelf && (
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
                         <select
                           value={u.role}
                           disabled={roleChangingId === u.id}
