@@ -105,7 +105,7 @@ export default function JobDetail() {
     ? job.skills_required.split(",").map((s) => s.trim()).filter(Boolean)
     : [];
 
-  const logoSrc = job.company_logo_url ? `${API_BASE}${job.company_logo_url}` : null;
+  const logoSrc = isAuthenticated && job.company_logo_url ? `${API_BASE}${job.company_logo_url}` : null;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
@@ -127,18 +127,20 @@ export default function JobDetail() {
         <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
           <div className="flex items-start gap-4">
             {/* Company logo */}
-            <div className="hidden sm:flex shrink-0 w-14 h-14 rounded-xl overflow-hidden bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 items-center justify-center">
-              {logoSrc ? (
-                <img src={logoSrc} alt={job.company_name ?? "Company"} className="w-full h-full object-cover" />
-              ) : (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-teal-500 dark:text-teal-400">
-                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-                  <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
-                </svg>
-              )}
-            </div>
+            {isAuthenticated && (
+              <div className="hidden sm:flex shrink-0 w-14 h-14 rounded-xl overflow-hidden bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 items-center justify-center">
+                {logoSrc ? (
+                  <img src={logoSrc} alt={job.company_name ?? "Company"} className="w-full h-full object-cover" />
+                ) : (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-teal-500 dark:text-teal-400">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                    <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+                  </svg>
+                )}
+              </div>
+            )}
             <div>
-              {job.company_name && (
+              {isAuthenticated && job.company_name && (
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-0.5">{job.company_name}</p>
               )}
               <div className="flex flex-wrap items-center gap-2 mb-1">
