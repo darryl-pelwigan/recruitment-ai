@@ -44,7 +44,9 @@ export default function AllApplicants() {
     }).finally(() => setLoading(false));
   }, [canManage, navigate]);
 
-  async function toggleBookmark(applicantId: number) {
+  async function toggleBookmark(e: React.MouseEvent, applicantId: number) {
+    e.preventDefault();
+    e.stopPropagation();
     if (bookmarkingId === applicantId) return;
     setBookmarkingId(applicantId);
     try {
@@ -74,7 +76,7 @@ export default function AllApplicants() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
       <Navbar />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Applicants</h1>
           <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
@@ -103,9 +105,9 @@ export default function AllApplicants() {
         </div>
 
         {loading ? (
-          <div className="space-y-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-24 bg-gray-200 dark:bg-gray-800 rounded-2xl animate-pulse" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-52 bg-gray-200 dark:bg-gray-800 rounded-2xl animate-pulse" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
@@ -123,7 +125,7 @@ export default function AllApplicants() {
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((applicant) => {
               const avatarSrc = applicant.avatar_url ? `${API_BASE}${applicant.avatar_url}` : null;
               const skills = applicant.skills
@@ -133,75 +135,77 @@ export default function AllApplicants() {
               const resumeSrc = applicant.resume_url ? `${API_BASE}${applicant.resume_url}` : null;
 
               return (
-                <div key={applicant.id} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 hover:border-teal-200 dark:hover:border-teal-800 transition-colors">
-                  <div className="flex items-start gap-4">
-                    <div className="w-11 h-11 rounded-full overflow-hidden bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center shrink-0">
-                      {avatarSrc ? (
-                        <img src={avatarSrc} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-sm font-bold text-teal-700 dark:text-teal-300">{initials(applicant.full_name)}</span>
-                      )}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 dark:text-white">{applicant.full_name}</p>
-                          {applicant.headline && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{applicant.headline}</p>
-                          )}
-                          <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-400 dark:text-gray-500">
-                            <span>{applicant.email}</span>
-                            {applicant.location && <span>· {applicant.location}</span>}
-                            {applicant.years_of_experience != null && (
-                              <span>· {applicant.years_of_experience}yr exp</span>
-                            )}
-                          </div>
-                          {skills.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 mt-2">
-                              {skills.map((s) => (
-                                <span key={s} className="px-2 py-0.5 text-xs rounded-full bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 border border-teal-100 dark:border-teal-800">
-                                  {s}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-2 shrink-0">
-                          {resumeSrc && (
-                            <a
-                              href={resumeSrc}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                            >
-                              Resume
-                            </a>
-                          )}
-                          <Link
-                            to={`/applicants/${applicant.id}`}
-                            className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors"
-                          >
-                            View Profile
-                          </Link>
-                          <button
-                            onClick={() => toggleBookmark(applicant.id)}
-                            disabled={bookmarkingId === applicant.id}
-                            title={isSaved ? "Remove bookmark" : "Bookmark applicant"}
-                            className={`p-1.5 rounded-lg border transition-colors disabled:opacity-50 ${
-                              isSaved
-                                ? "border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400"
-                                : "border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-amber-500"
-                            }`}
-                          >
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                            </svg>
-                          </button>
-                        </div>
+                <div key={applicant.id} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 hover:border-teal-200 dark:hover:border-teal-800 transition-colors flex flex-col">
+                  {/* Top: avatar + bookmark */}
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <Link to={`/applicants/${applicant.id}`} className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-12 h-12 rounded-full overflow-hidden bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center shrink-0">
+                        {avatarSrc ? (
+                          <img src={avatarSrc} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-sm font-bold text-teal-700 dark:text-teal-300">{initials(applicant.full_name)}</span>
+                        )}
                       </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white hover:text-teal-600 dark:hover:text-teal-400 transition-colors truncate">{applicant.full_name}</p>
+                        {applicant.headline && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">{applicant.headline}</p>
+                        )}
+                      </div>
+                    </Link>
+                    <button
+                      onClick={(e) => toggleBookmark(e, applicant.id)}
+                      disabled={bookmarkingId === applicant.id}
+                      title={isSaved ? "Remove bookmark" : "Bookmark applicant"}
+                      className={`p-1.5 rounded-lg border transition-colors disabled:opacity-50 shrink-0 ${
+                        isSaved
+                          ? "border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400"
+                          : "border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-amber-500"
+                      }`}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Meta */}
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-400 dark:text-gray-500 mb-3">
+                    {applicant.location && <span>{applicant.location}</span>}
+                    {applicant.years_of_experience != null && (
+                      <span>{applicant.location ? "·" : ""} {applicant.years_of_experience}yr exp</span>
+                    )}
+                  </div>
+
+                  {/* Skills */}
+                  {skills.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-4">
+                      {skills.map((s) => (
+                        <span key={s} className="px-2 py-0.5 text-xs rounded-full bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 border border-teal-100 dark:border-teal-800">
+                          {s}
+                        </span>
+                      ))}
                     </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="mt-auto flex items-center gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
+                    {resumeSrc && (
+                      <a
+                        href={resumeSrc}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      >
+                        Resume
+                      </a>
+                    )}
+                    <Link
+                      to={`/applicants/${applicant.id}`}
+                      className="flex-1 text-center px-2.5 py-1.5 text-xs font-medium rounded-lg border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors"
+                    >
+                      View Profile
+                    </Link>
                   </div>
                 </div>
               );

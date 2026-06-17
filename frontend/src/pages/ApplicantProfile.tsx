@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/api";
 import Navbar from "../components/Navbar";
 import { useAuthStore, type User } from "../store/authStore";
@@ -23,6 +23,7 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 export default function ApplicantProfile() {
   const { id } = useParams<{ id: string }>();
   const { user: currentUser } = useAuthStore();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -67,7 +68,7 @@ export default function ApplicantProfile() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <Navbar />
-        <main className="max-w-3xl mx-auto px-4 py-16 text-center">
+        <main className="max-w-7xl mx-auto px-4 py-16 text-center">
           <p className="text-gray-500 dark:text-gray-400">Access denied.</p>
         </main>
       </div>
@@ -78,7 +79,7 @@ export default function ApplicantProfile() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <Navbar />
-        <main className="max-w-3xl mx-auto px-4 py-8">
+        <main className="max-w-7xl mx-auto px-4 py-8">
           <div className="animate-pulse space-y-4">
             <div className="h-32 bg-gray-200 dark:bg-gray-800 rounded-2xl" />
             <div className="h-48 bg-gray-200 dark:bg-gray-800 rounded-2xl" />
@@ -92,9 +93,9 @@ export default function ApplicantProfile() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <Navbar />
-        <main className="max-w-3xl mx-auto px-4 py-16 text-center">
+        <main className="max-w-7xl mx-auto px-4 py-16 text-center">
           <p className="text-gray-500 dark:text-gray-400">Applicant not found.</p>
-          <Link to="/saved-applicants" className="mt-4 inline-block text-sm text-teal-600 dark:text-teal-400 hover:underline">← Back</Link>
+          <button onClick={() => navigate(-1)} className="mt-4 inline-block text-sm text-teal-600 dark:text-teal-400 hover:underline">← Back</button>
         </main>
       </div>
     );
@@ -111,16 +112,16 @@ export default function ApplicantProfile() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
       <Navbar />
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Link
-          to="/saved-applicants"
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <button
+          onClick={() => navigate(-1)}
           className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors mb-6"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
           Back
-        </Link>
+        </button>
 
         {/* Header card */}
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 mb-5">

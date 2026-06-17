@@ -59,7 +59,7 @@ export default function SavedApplicants() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
       <Navbar />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Bookmarked Applicants</h1>
           <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">Applicants you've saved for future job listings.</p>

@@ -89,7 +89,7 @@ export default function Applicants() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
       <Navbar />
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         <Link
           to={`/jobs/${id}`}
@@ -160,7 +160,7 @@ export default function Applicants() {
               >
                 <div className="flex flex-wrap items-start gap-4">
                   {/* Avatar */}
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center shrink-0">
+                  <Link to={`/applicants/${app.user.id}`} className="w-10 h-10 rounded-full overflow-hidden bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center shrink-0 hover:ring-2 hover:ring-teal-400 transition-all">
                     {app.user.avatar_url ? (
                       <img
                         src={`${API_BASE}${app.user.avatar_url}`}
@@ -172,14 +172,14 @@ export default function Applicants() {
                         {initials(app.user.full_name)}
                       </span>
                     )}
-                  </div>
+                  </Link>
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                      <Link to={`/applicants/${app.user.id}`} className="text-sm font-semibold text-gray-900 dark:text-white hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
                         {app.user.full_name}
-                      </p>
+                      </Link>
                       <span
                         className={`px-2 py-0.5 text-xs font-medium rounded-full ${STATUS_COLORS[app.status] ?? "bg-gray-100 text-gray-600"}`}
                       >
