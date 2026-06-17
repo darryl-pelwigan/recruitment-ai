@@ -44,9 +44,10 @@ interface Props {
   onDeleted?: (id: number) => void;
   saved?: boolean;
   onSavedChange?: (jobId: number, saved: boolean) => void;
+  applied?: boolean;
 }
 
-export default function JobCard({ job, canManage = false, onDeleted, saved = false, onSavedChange }: Props) {
+export default function JobCard({ job, canManage = false, onDeleted, saved = false, onSavedChange, applied = false }: Props) {
   const { isAuthenticated, user } = useAuthStore();
   const salary = formatSalary(job.salary_min, job.salary_max, job.salary_currency);
   const navigate = useNavigate();
@@ -144,6 +145,14 @@ export default function JobCard({ job, canManage = false, onDeleted, saved = fal
             }`}>
               {job.status === "open" ? "Open" : "Closed"}
             </span>
+            {applied && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-800">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Applied
+              </span>
+            )}
           </div>
 
           {plainDescription && (

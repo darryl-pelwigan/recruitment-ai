@@ -31,15 +31,20 @@ export default function Jobs() {
   const [locationInput, setLocationInput] = useState("");
   const [myListings, setMyListings] = useState(canManage);
   const [savedJobIds, setSavedJobIds] = useState<Set<number>>(new Set());
+  const [appliedJobIds, setAppliedJobIds] = useState<Set<number>>(new Set());
 
-  // Load saved job IDs for non-manager authenticated users
+  // Load saved jobs + applied job IDs for non-manager authenticated users
   useEffect(() => {
     if (isAuthenticated && !canManage) {
-      api.get("/saved-jobs/").then((res) => {
-        setSavedJobIds(new Set(res.data.map((s: { job: { id: number } }) => s.job.id)));
+      Promise.all([
+        api.get("/saved-jobs/"),
+        user?.role === "applicant" ? api.get("/applications/me") : Promise.resolve({ data: { applications: [] } }),
+      ]).then(([savedRes, appsRes]) => {
+        setSavedJobIds(new Set(savedRes.data.map((s: { job: { id: number } }) => s.job.id)));
+        setAppliedJobIds(new Set(appsRes.data.applications.map((a: { job_id: number }) => a.job_id)));
       }).catch(() => {});
     }
-  }, [isAuthenticated, canManage]);
+  }, [isAuthenticated, canManage, user?.role]);
 
   function handleSavedChange(jobId: number, saved: boolean) {
     setSavedJobIds((prev) => {
@@ -135,10 +140,11 @@ export default function Jobs() {
 
         {/* Filter card */}
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 mb-6 shadow-sm">
-          <form onSubmit={handleSearch} className="space-y-3">
-            <div className="flex gap-2 flex-wrap">
-              <div className="flex-1 min-w-52 relative">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <form onSubmit={handleSearch}>
+            {/* Row 1: search inputs */}
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
                 <input
@@ -150,7 +156,7 @@ export default function Jobs() {
                 />
               </div>
               <div className="relative">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
                 </svg>
                 <input
@@ -158,56 +164,51 @@ export default function Jobs() {
                   placeholder="Location..."
                   value={locationInput}
                   onChange={(e) => setLocationInput(e.target.value)}
-                  className="pl-9 pr-3 py-2 w-44 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
+                  className="pl-9 pr-3 py-2 w-40 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
                 />
               </div>
               <button
                 type="submit"
-                className="px-5 py-2 text-sm font-medium rounded-xl bg-teal-600 hover:bg-teal-700 text-white transition-colors"
+                className="px-5 py-2 text-sm font-medium rounded-xl bg-teal-600 hover:bg-teal-700 text-white transition-colors shrink-0"
               >
                 Search
               </button>
-              {(search || location || employmentType) && (
-                <button
-                  type="button"
-                  onClick={handleClear}
-                  className="px-4 py-2 text-sm font-medium rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  Clear
-                </button>
-              )}
             </div>
 
-            {/* My Listings / All Jobs toggle — managers only */}
-            {canManage && (
-              <div className="flex gap-1">
-                <button
-                  type="button"
-                  onClick={() => handleListingsToggle(true)}
-                  className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${
-                    myListings
-                      ? "bg-teal-600 border-teal-600 text-white"
-                      : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-teal-400 hover:text-teal-600 dark:hover:text-teal-400 bg-gray-50 dark:bg-gray-800"
-                  }`}
-                >
-                  My Listings
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleListingsToggle(false)}
-                  className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${
-                    !myListings
-                      ? "bg-teal-600 border-teal-600 text-white"
-                      : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-teal-400 hover:text-teal-600 dark:hover:text-teal-400 bg-gray-50 dark:bg-gray-800"
-                  }`}
-                >
-                  All Jobs
-                </button>
-              </div>
-            )}
+            {/* Row 2: all filter pills + clear — single unified row */}
+            <div className="flex items-center gap-1.5 flex-wrap mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+              {/* My Listings / All Jobs toggle — managers only, styled as a tab group */}
+              {canManage && (
+                <>
+                  <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mr-1">
+                    <button
+                      type="button"
+                      onClick={() => handleListingsToggle(true)}
+                      className={`px-3 py-1 text-xs font-medium transition-colors ${
+                        myListings
+                          ? "bg-teal-600 text-white"
+                          : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      }`}
+                    >
+                      Mine
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleListingsToggle(false)}
+                      className={`px-3 py-1 text-xs font-medium border-l border-gray-200 dark:border-gray-700 transition-colors ${
+                        !myListings
+                          ? "bg-teal-600 text-white"
+                          : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      }`}
+                    >
+                      All
+                    </button>
+                  </div>
+                  <div className="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-0.5" />
+                </>
+              )}
 
-            {/* Employment type pills */}
-            <div className="flex flex-wrap gap-2">
+              {/* Employment type pills */}
               {EMPLOYMENT_TYPES.map((type) => (
                 <button
                   key={type}
@@ -216,12 +217,26 @@ export default function Jobs() {
                   className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${
                     employmentType === type
                       ? "bg-teal-600 border-teal-600 text-white"
-                      : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-teal-400 hover:text-teal-600 dark:hover:text-teal-400 bg-gray-50 dark:bg-gray-800"
+                      : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-teal-400 hover:text-teal-600 dark:hover:text-teal-400"
                   }`}
                 >
                   {type}
                 </button>
               ))}
+
+              {/* Clear — only when a filter is active */}
+              {(search || location || employmentType) && (
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  className="ml-auto flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                  Clear
+                </button>
+              )}
             </div>
           </form>
         </div>
@@ -246,6 +261,7 @@ export default function Jobs() {
                 onDeleted={handleJobDeleted}
                 saved={savedJobIds.has(job.id)}
                 onSavedChange={handleSavedChange}
+                applied={appliedJobIds.has(job.id)}
               />
             ))}
           </div>
