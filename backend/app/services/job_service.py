@@ -16,6 +16,7 @@ def get_jobs(
     employment_type: str | None = None,
     location: str | None = None,
     status: str | None = None,
+    posted_by_id: int | None = None,
 ):
     query = db.query(Job).filter(Job.deleted_at == None)  # noqa: E711
 
@@ -35,6 +36,9 @@ def get_jobs(
 
     if status:
         query = query.filter(Job.status == status)
+
+    if posted_by_id is not None:
+        query = query.filter(Job.posted_by_id == posted_by_id)
 
     total = query.count()
     total_pages = max(1, (total + page_size - 1) // page_size)

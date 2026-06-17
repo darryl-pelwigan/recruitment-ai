@@ -22,6 +22,7 @@ interface Job {
   company_logo_url: string | null;
   contact_email: string | null;
   status: string;
+  posted_by_id: number | null;
   created_at: string;
 }
 
@@ -54,6 +55,9 @@ export default function JobDetail() {
   const [notFound, setNotFound] = useState(false);
 
   const canManage = user && ["admin", "hr", "recruiter"].includes(user.role);
+  const isJobOwner = job ? (user?.role === "admin" || job.posted_by_id === user?.id) : false;
+  const canEditJob = !!(canManage && isJobOwner);
+  const canViewApplicants = !!(canManage && isJobOwner);
   const salary = job ? formatSalary(job.salary_min, job.salary_max, job.salary_currency) : null;
 
   const [hasApplied, setHasApplied] = useState(false);
@@ -278,32 +282,38 @@ export default function JobDetail() {
             </button>
           )}
 
-          {canManage && (
+          {(canViewApplicants || canEditJob) && (
             <div className="flex items-center gap-2">
-              <Link
-                to={`/jobs/${job.id}/applicants`}
-                className="px-4 py-2 text-sm font-medium rounded-xl border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors"
-              >
-                View Applicants
-              </Link>
-              <Link
-                to={`/jobs/${job.id}/pipeline`}
-                className="px-4 py-2 text-sm font-medium rounded-xl border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors inline-flex items-center gap-1.5"
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="7" height="7" />
-                  <rect x="14" y="3" width="7" height="7" />
-                  <rect x="14" y="14" width="7" height="7" />
-                  <rect x="3" y="14" width="7" height="7" />
-                </svg>
-                Pipeline
-              </Link>
-              <button
-                onClick={() => navigate(`/jobs/${job.id}/edit`)}
-                className="px-4 py-2 text-sm font-medium rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
-                Edit Job
-              </button>
+              {canViewApplicants && (
+                <>
+                  <Link
+                    to={`/jobs/${job.id}/applicants`}
+                    className="px-4 py-2 text-sm font-medium rounded-xl border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors"
+                  >
+                    View Applicants
+                  </Link>
+                  <Link
+                    to={`/jobs/${job.id}/pipeline`}
+                    className="px-4 py-2 text-sm font-medium rounded-xl border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors inline-flex items-center gap-1.5"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="7" height="7" />
+                      <rect x="14" y="3" width="7" height="7" />
+                      <rect x="14" y="14" width="7" height="7" />
+                      <rect x="3" y="14" width="7" height="7" />
+                    </svg>
+                    Pipeline
+                  </Link>
+                </>
+              )}
+              {canEditJob && (
+                <button
+                  onClick={() => navigate(`/jobs/${job.id}/edit`)}
+                  className="px-4 py-2 text-sm font-medium rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  Edit Job
+                </button>
+              )}
             </div>
           )}
         </div>

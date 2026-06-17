@@ -55,10 +55,10 @@ export default function JobCard({ job, canManage = false, onDeleted, saved = fal
 
   const canEdit =
     canManage &&
-    (user?.role === "admin" || user?.role === "hr" || job.posted_by_id === user?.id);
+    (user?.role === "admin" || job.posted_by_id === user?.id);
   const canDelete =
     canManage &&
-    (user?.role === "admin" || user?.role === "hr" || job.posted_by_id === user?.id);
+    (user?.role === "admin" || job.posted_by_id === user?.id);
 
   const showBookmark = isAuthenticated && !canManage;
 

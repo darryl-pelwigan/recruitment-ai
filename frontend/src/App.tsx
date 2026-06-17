@@ -14,6 +14,7 @@ import MyApplications from "./pages/MyApplications";
 import Applicants from "./pages/Applicants";
 import Pipeline from "./pages/Pipeline";
 import ApplicantProfile from "./pages/ApplicantProfile";
+import AllApplicants from "./pages/AllApplicants";
 import SavedApplicants from "./pages/SavedApplicants";
 import SavedJobs from "./pages/SavedJobs";
 import UserManagement from "./pages/UserManagement";
@@ -92,6 +93,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Pipeline />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/applicants"
+          element={
+            <ProtectedRoute>
+              <AllApplicants />
             </ProtectedRoute>
           }
         />

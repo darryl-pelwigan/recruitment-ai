@@ -24,7 +24,7 @@ LOGO_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "uploads", "logos
 
 
 def _check_job_ownership(job, current_user):
-    if current_user.role == "recruiter" and job.posted_by_id != current_user.id:
+    if current_user.role in ("recruiter", "hr") and job.posted_by_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only modify your own job postings",
@@ -40,8 +40,9 @@ def list_jobs(
     employment_type: Optional[str] = Query(None),
     location: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
+    posted_by_id: Optional[int] = Query(None),
 ):
-    return get_jobs(db, page, page_size, search, employment_type, location, status)
+    return get_jobs(db, page, page_size, search, employment_type, location, status, posted_by_id)
 
 
 @router.get("/{job_id}", response_model=JobResponse)

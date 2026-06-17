@@ -77,14 +77,14 @@ def get_recent_applications_for_user(
         .options(joinedload(Application.user), joinedload(Application.job))
         .join(Job, Application.job_id == Job.id)
     )
-    if role == "recruiter":
+    if role in ("recruiter", "hr"):
         query = query.filter(Job.posted_by_id == user_id)
     return query.order_by(Application.created_at.desc()).limit(limit).all()
 
 
 def get_applicant_count_for_user(db: Session, user_id: int, role: str) -> int:
     query = db.query(func.count(Application.id)).join(Job, Application.job_id == Job.id)
-    if role == "recruiter":
+    if role in ("recruiter", "hr"):
         query = query.filter(Job.posted_by_id == user_id)
     return query.scalar() or 0
 

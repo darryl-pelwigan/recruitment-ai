@@ -67,6 +67,12 @@ def job_applications(
     current_user: Annotated[object, Depends(MANAGE_ROLES)],
     db: Annotated[Session, Depends(get_db)],
 ):
+    if current_user.role in ("recruiter", "hr"):
+        job = get_job_by_id(db, job_id)
+        if not job:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
+        if job.posted_by_id != current_user.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can only view applicants for your own job postings")
     apps = get_applications_for_job(db, job_id)
     return ApplicationListResponse(applications=apps, total=len(apps))
 

@@ -29,6 +29,7 @@ export default function Jobs() {
   const [location, setLocation] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [locationInput, setLocationInput] = useState("");
+  const [myListings, setMyListings] = useState(canManage);
   const [savedJobIds, setSavedJobIds] = useState<Set<number>>(new Set());
 
   // Load saved job IDs for non-manager authenticated users
@@ -56,12 +57,13 @@ export default function Jobs() {
     if (search) params.set("search", search);
     if (employmentType) params.set("employment_type", employmentType);
     if (location) params.set("location", location);
+    if (canManage && myListings && user?.id) params.set("posted_by_id", String(user.id));
 
     api
       .get<JobListResponse>(`/jobs/?${params.toString()}`)
       .then((res) => setData(res.data))
       .finally(() => setLoading(false));
-  }, [page, search, employmentType, location]);
+  }, [page, search, employmentType, location, myListings, canManage, user?.id]);
 
   function handleSearch(e: { preventDefault(): void }) {
     e.preventDefault();
@@ -81,6 +83,11 @@ export default function Jobs() {
     setSearch("");
     setLocation("");
     setEmploymentType("");
+    setPage(1);
+  }
+
+  function handleListingsToggle(mine: boolean) {
+    setMyListings(mine);
     setPage(1);
   }
 
@@ -104,11 +111,11 @@ export default function Jobs() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Explore The Jobs
+              {canManage && myListings ? "My Job Listings" : "Explore The Jobs"}
             </h1>
             {data && (
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {data.total} {data.total === 1 ? "position" : "positions"} available
+                {data.total} {data.total === 1 ? "position" : "positions"} {canManage && myListings ? "posted" : "available"}
               </p>
             )}
           </div>
@@ -170,6 +177,34 @@ export default function Jobs() {
                 </button>
               )}
             </div>
+
+            {/* My Listings / All Jobs toggle — managers only */}
+            {canManage && (
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => handleListingsToggle(true)}
+                  className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${
+                    myListings
+                      ? "bg-teal-600 border-teal-600 text-white"
+                      : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-teal-400 hover:text-teal-600 dark:hover:text-teal-400 bg-gray-50 dark:bg-gray-800"
+                  }`}
+                >
+                  My Listings
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleListingsToggle(false)}
+                  className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${
+                    !myListings
+                      ? "bg-teal-600 border-teal-600 text-white"
+                      : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-teal-400 hover:text-teal-600 dark:hover:text-teal-400 bg-gray-50 dark:bg-gray-800"
+                  }`}
+                >
+                  All Jobs
+                </button>
+              </div>
+            )}
 
             {/* Employment type pills */}
             <div className="flex flex-wrap gap-2">
