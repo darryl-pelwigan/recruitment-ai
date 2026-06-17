@@ -53,6 +53,7 @@ class JobResponse(BaseModel):
     status: str
     posted_by_id: Optional[int]
     created_at: datetime
+    applicant_count: int = 0
 
     model_config = {"from_attributes": True}
 

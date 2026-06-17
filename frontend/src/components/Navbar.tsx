@@ -1,33 +1,119 @@
-import { useState, useRef, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
+import { api } from "../api/api";
 import BrandLogo from "./BrandLogo";
 import ThemeToggle from "./ThemeToggle";
 
 const API_BASE = "http://127.0.0.1:8000";
+const MANAGE_ROLES = ["admin", "hr", "recruiter"];
+const LAST_READ_KEY = "notif_last_read";
 
 const NAV_LINKS = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/jobs", label: "Jobs" },
 ];
 
+interface Notification {
+  id: number;
+  job_id: number;
+  created_at: string;
+  user: { id: number; full_name: string; avatar_url: string | null };
+  job: { id: number; title: string; company_name: string | null };
+}
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function Avatar({ name, avatarUrl, size = 9 }: { name: string; avatarUrl: string | null; size?: number }) {
+  const initials = name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  const src = avatarUrl ? `${API_BASE}${avatarUrl}` : null;
+  const cls = `w-${size} h-${size} rounded-full overflow-hidden bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center shrink-0`;
+  return (
+    <div className={cls}>
+      {src ? (
+        <img src={src} alt={name} className="w-full h-full object-cover" />
+      ) : (
+        <span className="text-xs font-bold text-teal-700 dark:text-teal-300">{initials}</span>
+      )}
+    </div>
+  );
+}
+
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const location = useLocation();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [lastRead, setLastRead] = useState<number>(() => {
+    const stored = localStorage.getItem(LAST_READ_KEY);
+    return stored ? parseInt(stored, 10) : 0;
+  });
+
   const menuRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  const canManage = user ? MANAGE_ROLES.includes(user.role) : false;
+
+  const unreadCount = notifications.filter(
+    (n) => new Date(n.created_at).getTime() > lastRead
+  ).length;
+
+  const fetchNotifications = useCallback(() => {
+    if (!canManage) return;
+    api.get<{ applications: Notification[] }>("/applications/recent")
+      .then((res) => setNotifications(res.data.applications))
+      .catch(() => {});
+  }, [canManage]);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  function openNotif() {
+    setNotifOpen((o) => {
+      if (!o) {
+        fetchNotifications();
+      }
+      return !o;
+    });
+  }
+
+  function markAllRead() {
+    const now = Date.now();
+    localStorage.setItem(LAST_READ_KEY, String(now));
+    setLastRead(now);
+  }
+
+  useEffect(() => {
+    if (notifOpen) markAllRead();
+  }, [notifOpen]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
       }
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const initials = user?.full_name
+  const userInitials = user?.full_name
     .split(" ")
     .map((n) => n[0])
     .join("")
@@ -86,6 +172,94 @@ export default function Navbar() {
           <div className="flex items-center gap-3">
             <ThemeToggle />
 
+            {/* Notification bell — managers only */}
+            {canManage && (
+              <div className="relative" ref={notifRef}>
+                <button
+                  onClick={openNotif}
+                  className="relative p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  </svg>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 flex items-center justify-center rounded-full bg-teal-600 text-white text-[10px] font-bold leading-none">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {notifOpen && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl z-50 overflow-hidden">
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Notifications</h3>
+                      {notifications.length > 0 && (
+                        <button
+                          onClick={markAllRead}
+                          className="text-xs text-teal-600 dark:text-teal-400 hover:underline font-medium"
+                        >
+                          Mark all as read
+                        </button>
+                      )}
+                    </div>
+
+                    {/* List */}
+                    <div className="max-h-96 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
+                      {notifications.length === 0 ? (
+                        <div className="px-4 py-10 text-center">
+                          <svg className="mx-auto mb-2 text-gray-300 dark:text-gray-600" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                          </svg>
+                          <p className="text-sm text-gray-400 dark:text-gray-500">No notifications yet</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-600 mt-0.5">You'll see new applicants here</p>
+                        </div>
+                      ) : (
+                        notifications.map((n) => {
+                          const isUnread = new Date(n.created_at).getTime() > lastRead;
+                          return (
+                            <button
+                              key={n.id}
+                              onClick={() => {
+                                setNotifOpen(false);
+                                navigate(`/jobs/${n.job.id}/applicants`);
+                              }}
+                              className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/60 ${
+                                isUnread ? "bg-teal-50/60 dark:bg-teal-900/10" : ""
+                              }`}
+                            >
+                              <div className="relative shrink-0 mt-0.5">
+                                <Avatar name={n.user.full_name} avatarUrl={n.user.avatar_url} size={9} />
+                                {isUnread && (
+                                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-teal-500 border-2 border-white dark:border-gray-900" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-gray-800 dark:text-gray-200 leading-snug">
+                                  <span className="font-semibold">{n.user.full_name}</span>
+                                  {" applied for "}
+                                  <span className="font-semibold text-teal-600 dark:text-teal-400">{n.job.title}</span>
+                                </p>
+                                {n.job.company_name && (
+                                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 truncate">{n.job.company_name}</p>
+                                )}
+                                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{timeAgo(n.created_at)}</p>
+                              </div>
+                              {isUnread && (
+                                <span className="shrink-0 mt-2 w-2 h-2 rounded-full bg-teal-500" />
+                              )}
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {isAuthenticated ? (
               <div className="relative" ref={menuRef}>
                 <button
@@ -97,7 +271,7 @@ export default function Navbar() {
                     {avatarSrc ? (
                       <img src={avatarSrc} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-xs font-bold text-teal-700 dark:text-teal-300">{initials}</span>
+                      <span className="text-xs font-bold text-teal-700 dark:text-teal-300">{userInitials}</span>
                     )}
                   </div>
                   <span className="hidden sm:block text-sm text-gray-700 dark:text-gray-300 font-medium max-w-32 truncate">

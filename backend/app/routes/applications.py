@@ -16,8 +16,10 @@ from app.schemas.application_schema import (
 from app.services.application_service import (
     already_applied,
     create_application,
+    get_applicant_count_for_user,
     get_application_by_id,
     get_applications_for_job,
+    get_recent_applications_for_user,
     get_user_applications,
     update_application_status,
 )
@@ -26,6 +28,24 @@ from app.services.job_service import get_job_by_id
 router = APIRouter(prefix="/applications", tags=["Applications"])
 MANAGE_ROLES = require_roles("admin", "hr", "recruiter")
 RESUME_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "uploads", "resumes")
+
+
+@router.get("/count")
+def applicant_count(
+    current_user: Annotated[object, Depends(MANAGE_ROLES)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    total = get_applicant_count_for_user(db, current_user.id, current_user.role)
+    return {"total": total}
+
+
+@router.get("/recent", response_model=ApplicationListResponse)
+def recent_applications(
+    current_user: Annotated[object, Depends(MANAGE_ROLES)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    apps = get_recent_applications_for_user(db, current_user.id, current_user.role)
+    return ApplicationListResponse(applications=apps, total=len(apps))
 
 
 @router.get("/me", response_model=ApplicationListResponse)

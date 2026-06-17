@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func
 
 from app.models.application import Application
+from app.models.job import Job
 
 
 def _load(db: Session, app_id: int) -> Application | None:
@@ -63,6 +65,26 @@ def get_user_applications(db: Session, user_id: int) -> list[Application]:
 
 def get_application_by_id(db: Session, app_id: int) -> Application | None:
     return _load(db, app_id)
+
+
+def get_recent_applications_for_user(
+    db: Session, user_id: int, role: str, limit: int = 20
+) -> list[Application]:
+    query = (
+        db.query(Application)
+        .options(joinedload(Application.user), joinedload(Application.job))
+        .join(Job, Application.job_id == Job.id)
+    )
+    if role == "recruiter":
+        query = query.filter(Job.posted_by_id == user_id)
+    return query.order_by(Application.created_at.desc()).limit(limit).all()
+
+
+def get_applicant_count_for_user(db: Session, user_id: int, role: str) -> int:
+    query = db.query(func.count(Application.id)).join(Job, Application.job_id == Job.id)
+    if role == "recruiter":
+        query = query.filter(Job.posted_by_id == user_id)
+    return query.scalar() or 0
 
 
 def update_application_status(db: Session, app_id: int, new_status: str) -> Application | None:

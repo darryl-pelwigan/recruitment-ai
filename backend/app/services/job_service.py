@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 
+from app.models.application import Application
 from app.models.job import Job
 from app.schemas.job_schema import JobCreate, JobUpdate
 
@@ -44,6 +45,15 @@ def get_jobs(
         .all()
     )
 
+    counts = dict(
+        db.query(Application.job_id, func.count(Application.id))
+        .filter(Application.job_id.in_([j.id for j in jobs]))
+        .group_by(Application.job_id)
+        .all()
+    )
+    for job in jobs:
+        job.applicant_count = counts.get(job.id, 0)
+
     return {
         "jobs": jobs,
         "total": total,
@@ -54,11 +64,19 @@ def get_jobs(
 
 
 def get_job_by_id(db: Session, job_id: int) -> Job | None:
-    return (
+    job = (
         db.query(Job)
         .filter(Job.id == job_id, Job.deleted_at == None)  # noqa: E711
         .first()
     )
+    if job:
+        job.applicant_count = (
+            db.query(func.count(Application.id))
+            .filter(Application.job_id == job_id)
+            .scalar()
+            or 0
+        )
+    return job
 
 
 def create_job(db: Session, data: JobCreate, posted_by_id: int) -> Job:

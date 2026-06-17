@@ -18,6 +18,7 @@ export interface Job {
   status: string;
   posted_by_id: number | null;
   created_at: string;
+  applicant_count: number;
 }
 
 const API_BASE = "http://127.0.0.1:8000";
@@ -87,9 +88,22 @@ export default function JobCard({ job, canManage = false, onDeleted }: Props) {
 
         {/* Middle: content */}
         <div className="flex-1 min-w-0">
-          {isAuthenticated && job.company_name && (
-            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mb-0.5">{job.company_name}</p>
-          )}
+          <div className="flex items-center gap-2 flex-wrap mb-0.5">
+            {isAuthenticated && job.company_name && (
+              <p className="text-xs font-medium text-gray-400 dark:text-gray-500">{job.company_name}</p>
+            )}
+            {canManage && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 border border-teal-100 dark:border-teal-800">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                {job.applicant_count} {job.applicant_count === 1 ? "applicant" : "applicants"}
+              </span>
+            )}
+          </div>
           <div className="flex flex-wrap items-center gap-2 mb-1">
             <Link
               to={`/jobs/${job.id}`}
