@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api/api";
 import { useAuthStore } from "../store/authStore";
 import { formatSalary } from "../lib/schemas";
+import ConfirmModal from "./ConfirmModal";
 
 export interface Job {
   id: number;
@@ -53,6 +54,8 @@ export default function JobCard({ job, canManage = false, onDeleted, saved = fal
   const navigate = useNavigate();
   const plainDescription = job.description ? stripHtml(job.description) : null;
   const [bookmarking, setBookmarking] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const canEdit =
     canManage &&
@@ -64,12 +67,15 @@ export default function JobCard({ job, canManage = false, onDeleted, saved = fal
   const showBookmark = isAuthenticated && !canManage;
 
   async function handleDelete() {
-    if (!window.confirm(`Delete "${job.title}"? This cannot be undone.`)) return;
+    setDeleting(true);
     try {
       await api.delete(`/jobs/${job.id}`);
+      setConfirmOpen(false);
       onDeleted?.(job.id);
     } catch {
-      alert("Failed to delete job. Please try again.");
+      // ignore — modal stays open so user can retry
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -242,7 +248,7 @@ export default function JobCard({ job, canManage = false, onDeleted, saved = fal
                 )}
                 {canDelete && (
                   <button
-                    onClick={handleDelete}
+                    onClick={() => setConfirmOpen(true)}
                     className="px-3 py-1 text-xs font-medium rounded-lg border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                   >
                     Delete
@@ -254,6 +260,15 @@ export default function JobCard({ job, canManage = false, onDeleted, saved = fal
         </div>
 
       </div>
+      <ConfirmModal
+        open={confirmOpen}
+        title="Delete Job Listing"
+        message={`Are you sure you want to delete "${job.title}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }

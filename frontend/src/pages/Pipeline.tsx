@@ -281,8 +281,8 @@ export default function Pipeline() {
         {/* Header */}
         <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
           <div>
-            <Link
-              to={`/jobs/${id}/applicants`}
+            <button
+              onClick={() => navigate(-1)}
               className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors mb-1"
             >
               <svg
@@ -298,7 +298,7 @@ export default function Pipeline() {
                 <polyline points="15 18 9 12 15 6" />
               </svg>
               Back to Applicants
-            </Link>
+            </button>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               Pipeline
             </h1>

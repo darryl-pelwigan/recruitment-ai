@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password, verify_password
@@ -33,6 +35,9 @@ def create_user(db: Session, data: UserCreate) -> User:
 def authenticate_user(db: Session, email: str, password: str) -> User | None:
     user = get_user_by_email(db, email)
     if user and verify_password(password, user.password):
+        user.last_login = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(user)
         return user
     return None
 

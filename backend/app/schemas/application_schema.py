@@ -18,6 +18,7 @@ class ApplicantInfo(BaseModel):
     full_name: str
     email: str
     avatar_url: Optional[str] = None
+    last_login: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
 

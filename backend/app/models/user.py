@@ -24,6 +24,9 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+    last_login: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Extended applicant profile fields
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)

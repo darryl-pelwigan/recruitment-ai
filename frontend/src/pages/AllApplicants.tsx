@@ -16,6 +16,7 @@ interface Applicant {
   years_of_experience: number | null;
   skills: string | null;
   resume_url: string | null;
+  last_login: string | null;
 }
 
 interface JobOption {
@@ -48,6 +49,22 @@ function scoreColor(score: number): string {
   if (score >= 70) return "bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 border border-teal-200 dark:border-teal-800";
   if (score >= 40) return "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800";
   return "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800";
+}
+
+function timeAgo(iso: string | null): string {
+  if (!iso) return "Never logged in";
+  const diff = Date.now() - new Date(iso).getTime();
+  const minutes = Math.floor(diff / 60_000);
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days} day${days === 1 ? "" : "s"} ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months} month${months === 1 ? "" : "s"} ago`;
+  const years = Math.floor(months / 12);
+  return `${years} year${years === 1 ? "" : "s"} ago`;
 }
 
 export default function AllApplicants() {
@@ -401,6 +418,10 @@ export default function AllApplicants() {
                     {applicant.years_of_experience != null && (
                       <span>{applicant.location ? "·" : ""} {applicant.years_of_experience}yr exp</span>
                     )}
+                    <span className="flex items-center gap-1 w-full mt-0.5">
+                      <span className={`inline-block w-1.5 h-1.5 rounded-full shrink-0 ${applicant.last_login && Date.now() - new Date(applicant.last_login).getTime() < 7 * 24 * 60 * 60 * 1000 ? "bg-emerald-400" : "bg-gray-300 dark:bg-gray-600"}`} />
+                      Last seen {timeAgo(applicant.last_login)}
+                    </span>
                   </div>
 
                   {/* Skills */}

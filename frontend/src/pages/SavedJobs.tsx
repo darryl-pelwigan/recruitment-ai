@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api/api";
 import Navbar from "../components/Navbar";
+import ConfirmModal from "../components/ConfirmModal";
 import { useAuthStore } from "../store/authStore";
 import { formatSalary } from "../lib/schemas";
 
@@ -33,6 +34,7 @@ export default function SavedJobs() {
   const [entries, setEntries] = useState<SavedJobEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState<number | null>(null);
+  const [confirmJob, setConfirmJob] = useState<SavedJobEntry | null>(null);
 
   const canManage = user && ["admin", "hr", "recruiter"].includes(user.role);
 
@@ -59,15 +61,15 @@ export default function SavedJobs() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
-          <Link
-            to="/jobs"
+          <button
+            onClick={() => navigate(-1)}
             className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="15 18 9 12 15 6" />
             </svg>
             Back to Jobs
-          </Link>
+          </button>
           <h1 className="mt-3 text-2xl font-bold text-gray-900 dark:text-white">Saved Jobs</h1>
           <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">Jobs you've bookmarked to apply to later.</p>
         </div>

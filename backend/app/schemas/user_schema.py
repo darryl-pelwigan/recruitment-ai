@@ -51,6 +51,7 @@ class UserResponse(BaseModel):
     role: str
     avatar_url: Optional[str] = None
     created_at: datetime
+    last_login: Optional[datetime] = None
     # Extended profile fields
     phone: Optional[str] = None
     location: Optional[str] = None
