@@ -25,6 +25,10 @@ class Job(Base):
     employment_type: Mapped[str | None] = mapped_column(String(50))
     salary_min: Mapped[float | None] = mapped_column(Float)
     salary_max: Mapped[float | None] = mapped_column(Float)
+    salary_currency: Mapped[str] = mapped_column(String(10), default="USD")
+    company_name: Mapped[str | None] = mapped_column(String(255))
+    company_logo_url: Mapped[str | None] = mapped_column(String(500))
+    contact_email: Mapped[str | None] = mapped_column(String(255))
     status: Mapped[str] = mapped_column(String(50), default="open")
     posted_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(

@@ -13,6 +13,10 @@ class JobCreate(BaseModel):
     employment_type: Optional[str] = None
     salary_min: Optional[float] = None
     salary_max: Optional[float] = None
+    salary_currency: str = "USD"
+    company_name: Optional[str] = None
+    company_logo_url: Optional[str] = None
+    contact_email: Optional[str] = None
     status: str = "open"
 
 
@@ -25,6 +29,10 @@ class JobUpdate(BaseModel):
     employment_type: Optional[str] = None
     salary_min: Optional[float] = None
     salary_max: Optional[float] = None
+    salary_currency: Optional[str] = None
+    company_name: Optional[str] = None
+    company_logo_url: Optional[str] = None
+    contact_email: Optional[str] = None
     status: Optional[str] = None
 
 
@@ -38,6 +46,10 @@ class JobResponse(BaseModel):
     employment_type: Optional[str]
     salary_min: Optional[float]
     salary_max: Optional[float]
+    salary_currency: str
+    company_name: Optional[str]
+    company_logo_url: Optional[str]
+    contact_email: Optional[str]
     status: str
     posted_by_id: Optional[int]
     created_at: datetime

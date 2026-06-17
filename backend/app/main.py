@@ -1,5 +1,8 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.routes import auth, jobs
 
@@ -12,6 +15,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Ensure upload directories exist
+_base = os.path.join(os.path.dirname(__file__), "..", "uploads")
+os.makedirs(os.path.join(_base, "avatars"), exist_ok=True)
+os.makedirs(os.path.join(_base, "logos"), exist_ok=True)
+
+app.mount("/uploads", StaticFiles(directory=os.path.join(_base)), name="uploads")
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(jobs.router, prefix="/api")

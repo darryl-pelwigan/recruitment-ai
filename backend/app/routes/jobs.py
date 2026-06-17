@@ -1,6 +1,8 @@
+import os
+import uuid
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -17,7 +19,16 @@ from app.services.job_service import (
 router = APIRouter(prefix="/jobs", tags=["Jobs"])
 
 MANAGE_ROLES = require_roles("admin", "hr", "recruiter")
-DELETE_ROLES = require_roles("admin", "hr")
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/svg+xml"}
+LOGO_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "uploads", "logos")
+
+
+def _check_job_ownership(job, current_user):
+    if current_user.role == "recruiter" and job.posted_by_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only modify your own job postings",
+        )
 
 
 @router.get("/", response_model=JobListResponse)
@@ -58,19 +69,53 @@ def update(
     job_id: int,
     data: JobUpdate,
     db: Annotated[Session, Depends(get_db)],
-    _: Annotated[object, Depends(MANAGE_ROLES)],
+    current_user: Annotated[object, Depends(MANAGE_ROLES)],
 ):
-    job = update_job(db, job_id, data)
+    job = get_job_by_id(db, job_id)
     if not job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
-    return job
+    _check_job_ownership(job, current_user)
+    return update_job(db, job_id, data)
 
 
 @router.delete("/{job_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete(
     job_id: int,
     db: Annotated[Session, Depends(get_db)],
-    _: Annotated[object, Depends(DELETE_ROLES)],
+    current_user: Annotated[object, Depends(MANAGE_ROLES)],
 ):
-    if not soft_delete_job(db, job_id):
+    job = get_job_by_id(db, job_id)
+    if not job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
+    _check_job_ownership(job, current_user)
+    soft_delete_job(db, job_id)
+
+
+@router.post("/logo", response_model=dict)
+async def upload_logo(
+    file: Annotated[UploadFile, File()],
+    _: Annotated[object, Depends(MANAGE_ROLES)],
+):
+    if file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only JPEG, PNG, WebP, or SVG images are allowed",
+        )
+
+    os.makedirs(LOGO_DIR, exist_ok=True)
+
+    ext = file.filename.rsplit(".", 1)[-1] if "." in file.filename else "png"
+    filename = f"{uuid.uuid4().hex}.{ext}"
+    filepath = os.path.join(LOGO_DIR, filename)
+
+    content = await file.read()
+    if len(content) > 2 * 1024 * 1024:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Logo must be under 2 MB",
+        )
+
+    with open(filepath, "wb") as f:
+        f.write(content)
+
+    return {"logo_url": f"/uploads/logos/{filename}"}
