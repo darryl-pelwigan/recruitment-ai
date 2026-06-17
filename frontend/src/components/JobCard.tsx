@@ -20,6 +20,7 @@ export interface Job {
   status: string;
   posted_by_id: number | null;
   created_at: string;
+  posted_at: string | null;
   applicant_count: number;
 }
 
@@ -233,14 +234,19 @@ export default function JobCard({ job, canManage = false, onDeleted, onStatusCha
 
         {/* Right: date + actions */}
         <div className="shrink-0 flex flex-col items-end gap-2 sm:gap-3">
-          <div className="inline-flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-            </svg>
-            {formatDate(job.created_at)}
+          <div className="inline-flex flex-col items-end gap-0.5">
+            <div className="inline-flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              {formatDate(job.posted_at ?? job.created_at)}
+            </div>
+            {job.posted_at && job.posted_at !== job.created_at && (
+              <span className="text-[10px] text-teal-500 dark:text-teal-400 font-medium">Reopened</span>
+            )}
           </div>
 
           <div className="flex items-center gap-1.5">

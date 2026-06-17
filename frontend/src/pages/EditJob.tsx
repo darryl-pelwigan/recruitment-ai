@@ -7,7 +7,7 @@ import Navbar from "../components/Navbar";
 import RichTextEditor from "../components/RichTextEditor";
 import { jobSchema, type JobData, CURRENCIES } from "../lib/schemas";
 
-const EMPLOYMENT_TYPES = ["Full-time", "Part-time", "Contract", "Remote"];
+const EMPLOYMENT_TYPES = ["Full-time", "Part-time", "Contract", "Intern"];
 const API_BASE = "http://127.0.0.1:8000";
 
 function Field({

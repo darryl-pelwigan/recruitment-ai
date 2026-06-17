@@ -38,11 +38,21 @@ def list_jobs(
     page_size: int = Query(10, ge=1, le=50),
     search: Optional[str] = Query(None),
     employment_type: list[str] = Query(default=[]),
-    location: Optional[str] = Query(None),
-    status: Optional[str] = Query(None),
+    location: list[str] = Query(default=[]),
+    status: list[str] = Query(default=[]),
     posted_by_id: Optional[int] = Query(None),
+    posted_within_days: Optional[int] = Query(None, ge=1),
+    applicant_status: list[str] = Query(default=[]),
 ):
-    return get_jobs(db, page, page_size, search, employment_type or None, location, status, posted_by_id)
+    return get_jobs(
+        db, page, page_size, search,
+        employment_type or None,
+        location or None,
+        status or None,
+        posted_by_id,
+        posted_within_days,
+        applicant_status or None,
+    )
 
 
 @router.get("/{job_id}", response_model=JobResponse)
