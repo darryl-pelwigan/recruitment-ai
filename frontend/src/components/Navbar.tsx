@@ -158,16 +158,28 @@ export default function Navbar() {
                   </Link>
                 ))}
                 {user?.role === "applicant" && (
-                  <Link
-                    to="/my-applications"
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      location.pathname === "/my-applications"
-                        ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
-                        : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
-                    }`}
-                  >
-                    My Applications
-                  </Link>
+                  <>
+                    <Link
+                      to="/my-applications"
+                      className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        location.pathname === "/my-applications"
+                          ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
+                          : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
+                      }`}
+                    >
+                      My Applications
+                    </Link>
+                    <Link
+                      to="/resumes"
+                      className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        location.pathname === "/resumes"
+                          ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
+                          : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
+                      }`}
+                    >
+                      Resumes
+                    </Link>
+                  </>
                 )}
                 {canManage && (
                   <Link
@@ -441,16 +453,28 @@ export default function Navbar() {
             </Link>
           ))}
           {user?.role === "applicant" && (
-            <Link
-              to="/my-applications"
-              className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                location.pathname === "/my-applications"
-                  ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
-                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              My Applications
-            </Link>
+            <>
+              <Link
+                to="/my-applications"
+                className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                  location.pathname === "/my-applications"
+                    ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
+                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+                }`}
+              >
+                My Applications
+              </Link>
+              <Link
+                to="/resumes"
+                className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                  location.pathname === "/resumes"
+                    ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
+                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+                }`}
+              >
+                Resumes
+              </Link>
+            </>
           )}
           {canManage && (
             <Link

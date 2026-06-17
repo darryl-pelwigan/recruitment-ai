@@ -13,7 +13,7 @@ def get_jobs(
     page: int = 1,
     page_size: int = 10,
     search: str | None = None,
-    employment_type: str | None = None,
+    employment_types: list[str] | None = None,
     location: str | None = None,
     status: str | None = None,
     posted_by_id: int | None = None,
@@ -28,8 +28,8 @@ def get_jobs(
             )
         )
 
-    if employment_type:
-        query = query.filter(Job.employment_type == employment_type)
+    if employment_types:
+        query = query.filter(Job.employment_type.in_(employment_types))
 
     if location:
         query = query.filter(Job.location.ilike(f"%{location}%"))

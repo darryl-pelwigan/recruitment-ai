@@ -120,7 +120,11 @@ export default function JobCard({ job, canManage = false, onDeleted, saved = fal
               <p className="text-xs font-medium text-gray-400 dark:text-gray-500">{job.company_name}</p>
             )}
             {canManage && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 border border-teal-100 dark:border-teal-800">
+              <Link
+                to={`/jobs/${job.id}/applicants`}
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 border border-teal-100 dark:border-teal-800 hover:bg-teal-100 dark:hover:bg-teal-900/50 transition-colors"
+              >
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                   <circle cx="9" cy="7" r="4" />
@@ -128,7 +132,7 @@ export default function JobCard({ job, canManage = false, onDeleted, saved = fal
                   <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
                 {job.applicant_count} {job.applicant_count === 1 ? "applicant" : "applicants"}
-              </span>
+              </Link>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -138,13 +142,6 @@ export default function JobCard({ job, canManage = false, onDeleted, saved = fal
             >
               {job.title}
             </Link>
-            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-              job.status === "open"
-                ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
-            }`}>
-              {job.status === "open" ? "Open" : "Closed"}
-            </span>
             {applied && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-800">
                 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">

@@ -18,6 +18,7 @@ import AllApplicants from "./pages/AllApplicants";
 import SavedApplicants from "./pages/SavedApplicants";
 import SavedJobs from "./pages/SavedJobs";
 import UserManagement from "./pages/UserManagement";
+import Resumes from "./pages/Resumes";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
@@ -125,6 +126,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <SavedJobs />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resumes"
+          element={
+            <ProtectedRoute>
+              <Resumes />
             </ProtectedRoute>
           }
         />
