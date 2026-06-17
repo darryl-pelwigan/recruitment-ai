@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api/api";
 import Navbar from "../components/Navbar";
-import ConfirmModal from "../components/ConfirmModal";
 import { useAuthStore } from "../store/authStore";
 import { formatSalary } from "../lib/schemas";
 
@@ -34,7 +33,6 @@ export default function SavedJobs() {
   const [entries, setEntries] = useState<SavedJobEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState<number | null>(null);
-  const [confirmJob, setConfirmJob] = useState<SavedJobEntry | null>(null);
 
   const canManage = user && ["admin", "hr", "recruiter"].includes(user.role);
 
