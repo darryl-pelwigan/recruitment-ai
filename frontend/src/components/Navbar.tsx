@@ -55,6 +55,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [lastRead, setLastRead] = useState<number>(() => {
     const stored = localStorage.getItem(LAST_READ_KEY);
@@ -99,6 +100,10 @@ export default function Navbar() {
   useEffect(() => {
     if (notifOpen) markAllRead();
   }, [notifOpen]);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -182,6 +187,24 @@ export default function Navbar() {
 
           {/* Right: theme + auth */}
           <div className="flex items-center gap-3">
+            {/* Hamburger — mobile only */}
+            {isAuthenticated && (
+              <button
+                onClick={() => setMobileOpen((o) => !o)}
+                className="md:hidden p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                aria-label="Toggle navigation"
+              >
+                {mobileOpen ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+                  </svg>
+                )}
+              </button>
+            )}
             <ThemeToggle />
 
             {/* Notification bell — managers only */}
@@ -400,6 +423,49 @@ export default function Navbar() {
 
         </div>
       </div>
+
+      {/* Mobile navigation panel */}
+      {mobileOpen && isAuthenticated && (
+        <div className="md:hidden border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3 space-y-1">
+          {NAV_LINKS.map(({ to, label }) => (
+            <Link
+              key={to}
+              to={to}
+              className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                location.pathname === to
+                  ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
+                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+              }`}
+            >
+              {label}
+            </Link>
+          ))}
+          {user?.role === "applicant" && (
+            <Link
+              to="/my-applications"
+              className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                location.pathname === "/my-applications"
+                  ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
+                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+              }`}
+            >
+              My Applications
+            </Link>
+          )}
+          {canManage && (
+            <Link
+              to="/applicants"
+              className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                location.pathname === "/applicants"
+                  ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
+                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+              }`}
+            >
+              Applicants
+            </Link>
+          )}
+        </div>
+      )}
     </nav>
   );
 }

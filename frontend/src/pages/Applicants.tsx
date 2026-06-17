@@ -16,6 +16,13 @@ interface ApplicationItem {
   job: { id: number; title: string; company_name: string | null };
 }
 
+function scoreColor(score: number) {
+  if (score >= 90) return "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400";
+  if (score >= 70) return "bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400";
+  if (score >= 40) return "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
+  return "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+}
+
 const VALID_STATUSES = [
   { value: "applied", label: "Applied" },
   { value: "under_review", label: "Under Review" },
@@ -53,6 +60,7 @@ export default function Applicants() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [expandedCover, setExpandedCover] = useState<number | null>(null);
+  const [rescoring, setRescoring] = useState(false);
 
   const canManage = user && ["admin", "hr", "recruiter"].includes(user.role);
 
@@ -68,6 +76,19 @@ export default function Applicants() {
       }
     ).finally(() => setLoading(false));
   }, [id, canManage, navigate]);
+
+  async function handleRescoreAll() {
+    if (rescoring || applications.length === 0) return;
+    setRescoring(true);
+    try {
+      const results = await Promise.all(
+        applications.map((app) => api.post(`/applications/${app.id}/score`).then((r) => r.data))
+      );
+      setApplications(results);
+    } catch { /* silently ignore */ } finally {
+      setRescoring(false);
+    }
+  }
 
   async function handleStatusChange(appId: number, newStatus: string) {
     setUpdatingId(appId);
@@ -110,6 +131,18 @@ export default function Applicants() {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleRescoreAll}
+              disabled={rescoring || applications.length === 0}
+              title="Re-run AI scoring for all applicants"
+              className="px-3 py-1.5 text-xs font-medium rounded-lg border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={rescoring ? "animate-spin" : ""}>
+                <path d="M23 4v6h-6" /><path d="M1 20v-6h6" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+              </svg>
+              {rescoring ? "Scoring..." : "Re-score All"}
+            </button>
             <Link
               to={`/jobs/${id}/pipeline`}
               className="px-3 py-1.5 text-xs font-medium rounded-lg border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors inline-flex items-center gap-1.5"
@@ -184,6 +217,9 @@ export default function Applicants() {
                         className={`px-2 py-0.5 text-xs font-medium rounded-full ${STATUS_COLORS[app.status] ?? "bg-gray-100 text-gray-600"}`}
                       >
                         {VALID_STATUSES.find((s) => s.value === app.status)?.label ?? app.status}
+                      </span>
+                      <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${scoreColor(app.ai_score)}`}>
+                        AI {app.ai_score}%
                       </span>
                     </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">

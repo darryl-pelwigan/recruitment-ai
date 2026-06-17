@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import get_current_user, require_roles
+from app.models.application import Application
 from app.models.user import User
 from app.schemas.user_schema import UserResponse
 from app.services.auth_service import get_user_by_id
@@ -18,12 +19,17 @@ def list_applicants(
     current_user: Annotated[object, Depends(MANAGE_ROLES)],
     db: Annotated[Session, Depends(get_db)],
     search: Optional[str] = Query(None),
+    job_id: Optional[int] = Query(None),
 ):
     query = db.query(User).filter(User.role == "applicant")
     if search:
         term = f"%{search}%"
         query = query.filter(
             (User.full_name.ilike(term)) | (User.email.ilike(term))
+        )
+    if job_id is not None:
+        query = query.join(Application, Application.user_id == User.id).filter(
+            Application.job_id == job_id
         )
     return query.order_by(User.full_name.asc()).all()
 

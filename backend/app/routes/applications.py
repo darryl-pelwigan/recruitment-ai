@@ -25,6 +25,7 @@ from app.services.application_service import (
     get_notes,
     get_recent_applications_for_user,
     get_user_applications,
+    rescore_application,
     update_application_status,
 )
 from app.services.job_service import get_job_by_id
@@ -114,6 +115,18 @@ def list_history(
     if not app:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Application not found")
     return get_history(db, app_id)
+
+
+@router.post("/{app_id}/score", response_model=ApplicationResponse)
+def rescore(
+    app_id: int,
+    current_user: Annotated[object, Depends(MANAGE_ROLES)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    app = get_application_by_id(db, app_id)
+    if not app:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Application not found")
+    return rescore_application(db, app)
 
 
 @router.patch("/{app_id}/status", response_model=ApplicationResponse)

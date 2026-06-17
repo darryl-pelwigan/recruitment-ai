@@ -42,6 +42,23 @@ def create_application(
     db.add(app)
     db.commit()
     db.refresh(app)
+
+    # Auto-score the application against the job description
+    try:
+        from app.services.ai_service import score_application as _score
+        job = db.query(Job).filter(Job.id == job_id).first()
+        if job:
+            app.ai_score = _score(
+                resume_url=resume_url,
+                cover_letter=cover_letter,
+                skills_required=job.skills_required,
+                description=job.description,
+                requirements=job.requirements,
+            )
+            db.commit()
+    except Exception:
+        pass  # scoring failure is non-fatal
+
     return _load(db, app.id)
 
 
@@ -50,9 +67,27 @@ def get_applications_for_job(db: Session, job_id: int) -> list[Application]:
         db.query(Application)
         .options(joinedload(Application.user), joinedload(Application.job))
         .filter(Application.job_id == job_id)
-        .order_by(Application.created_at.desc())
+        .order_by(Application.ai_score.desc(), Application.created_at.desc())
         .all()
     )
+
+
+def rescore_application(db: Session, application: Application) -> Application:
+    """Re-run AI scoring for an existing application and persist the result."""
+    try:
+        from app.services.ai_service import score_application as _score
+        job = application.job
+        application.ai_score = _score(
+            resume_url=application.resume_url,
+            cover_letter=application.cover_letter,
+            skills_required=job.skills_required if job else None,
+            description=job.description if job else None,
+            requirements=job.requirements if job else None,
+        )
+        db.commit()
+    except Exception:
+        pass
+    return _load(db, application.id)
 
 
 def get_user_applications(db: Session, user_id: int) -> list[Application]:
