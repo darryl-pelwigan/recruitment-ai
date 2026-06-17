@@ -135,6 +135,7 @@ async def apply(
     db: Annotated[Session, Depends(get_db)],
     cover_letter: Annotated[Optional[str], Form()] = None,
     resume: Annotated[Optional[UploadFile], File()] = None,
+    use_profile_resume: Annotated[Optional[str], Form()] = None,
 ):
     job = get_job_by_id(db, job_id)
     if not job:
@@ -168,5 +169,7 @@ async def apply(
         with open(os.path.join(RESUME_DIR, filename), "wb") as f:
             f.write(content)
         resume_url = f"/uploads/resumes/{filename}"
+    elif use_profile_resume == "true" and current_user.resume_url:
+        resume_url = current_user.resume_url
 
     return create_application(db, job_id, current_user.id, resume_url, cover_letter)

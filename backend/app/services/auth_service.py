@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 
 from app.core.security import hash_password, verify_password
 from app.models.user import User
-from app.schemas.user_schema import UserCreate, UserUpdate
+from app.schemas.user_schema import AdminPasswordChange, ExtendedProfileUpdate, UserCreate, UserUpdate
 
 
 def get_user_by_email(db: Session, email: str) -> User | None:
@@ -11,6 +11,10 @@ def get_user_by_email(db: Session, email: str) -> User | None:
 
 def get_user_by_id(db: Session, user_id: int) -> User | None:
     return db.query(User).filter(User.id == user_id).first()
+
+
+def get_all_users(db: Session) -> list[User]:
+    return db.query(User).order_by(User.created_at.desc()).all()
 
 
 def create_user(db: Session, data: UserCreate) -> User:
@@ -34,7 +38,6 @@ def authenticate_user(db: Session, email: str, password: str) -> User | None:
 
 
 def update_user_profile(db: Session, user: User, data: UserUpdate) -> tuple[User, str | None]:
-    """Returns (updated_user, error_message). error_message is None on success."""
     if data.new_password:
         if not data.current_password:
             return user, "Current password is required to set a new password"
@@ -55,8 +58,37 @@ def update_user_profile(db: Session, user: User, data: UserUpdate) -> tuple[User
     return user, None
 
 
+def update_extended_profile(db: Session, user: User, data: ExtendedProfileUpdate) -> User:
+    for field, value in data.model_dump(exclude_none=True).items():
+        setattr(user, field, value)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
 def update_user_avatar(db: Session, user: User, avatar_url: str) -> User:
     user.avatar_url = avatar_url
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def update_user_resume(db: Session, user: User, resume_url: str) -> User:
+    user.resume_url = resume_url
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def admin_change_password(db: Session, user: User, data: AdminPasswordChange) -> User:
+    user.password = hash_password(data.new_password)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def admin_change_role(db: Session, user: User, role: str) -> User:
+    user.role = role
     db.commit()
     db.refresh(user)
     return user

@@ -60,9 +60,12 @@ export default function JobDetail() {
   const [applyOpen, setApplyOpen] = useState(false);
   const [coverLetter, setCoverLetter] = useState("");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [useProfileResume, setUseProfileResume] = useState(false);
   const [applying, setApplying] = useState(false);
   const [applyError, setApplyError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [jobSaved, setJobSaved] = useState(false);
+  const [bookmarking, setBookmarking] = useState(false);
 
   useEffect(() => {
     api
@@ -74,15 +77,45 @@ export default function JobDetail() {
 
   useEffect(() => {
     if (isAuthenticated && job) {
-      api
-        .get("/applications/me")
-        .then((res) => {
-          const apps = res.data.applications as { job_id: number }[];
+      const canManageUser = user && ["admin", "hr", "recruiter"].includes(user.role);
+      Promise.all([
+        api.get("/applications/me"),
+        canManageUser ? Promise.resolve(null) : api.get(`/saved-jobs/check/${job.id}`),
+      ])
+        .then(([appsRes, savedRes]) => {
+          const apps = appsRes.data.applications as { job_id: number }[];
           setHasApplied(apps.some((a) => a.job_id === job.id));
+          if (savedRes) setJobSaved(savedRes.data.saved);
         })
         .catch(() => {});
     }
-  }, [job, isAuthenticated]);
+  }, [job, isAuthenticated, user]);
+
+  async function toggleJobBookmark() {
+    if (!job || bookmarking) return;
+    setBookmarking(true);
+    try {
+      if (jobSaved) {
+        await api.delete(`/saved-jobs/${job.id}`);
+        setJobSaved(false);
+      } else {
+        await api.post(`/saved-jobs/${job.id}`);
+        setJobSaved(true);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setBookmarking(false);
+    }
+  }
+
+  function openApplyModal() {
+    setCoverLetter("");
+    setResumeFile(null);
+    setUseProfileResume(!!(user?.resume_url));
+    setApplyError(null);
+    setApplyOpen(true);
+  }
 
   async function handleApply() {
     setApplying(true);
@@ -90,14 +123,17 @@ export default function JobDetail() {
     try {
       const form = new FormData();
       if (coverLetter.trim()) form.append("cover_letter", coverLetter.trim());
-      if (resumeFile) form.append("resume", resumeFile);
+      // If user picked a new file, upload it; otherwise if using profile resume, pass the URL
+      if (resumeFile) {
+        form.append("resume", resumeFile);
+      } else if (useProfileResume && user?.resume_url) {
+        form.append("use_profile_resume", "true");
+      }
       await api.post(`/applications/${job!.id}`, form, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setHasApplied(true);
       setApplyOpen(false);
-      setCoverLetter("");
-      setResumeFile(null);
     } catch (err: unknown) {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
       setApplyError(detail ?? "Something went wrong. Please try again.");
@@ -224,6 +260,23 @@ export default function JobDetail() {
               </div>
             </div>
           </div>
+
+          {isAuthenticated && !canManage && (
+            <button
+              onClick={toggleJobBookmark}
+              disabled={bookmarking}
+              className={`px-4 py-2 text-sm font-medium rounded-xl border transition-colors inline-flex items-center gap-2 disabled:opacity-50 ${
+                jobSaved
+                  ? "border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
+                  : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+              }`}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill={jobSaved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+              </svg>
+              {jobSaved ? "Saved" : "Save Job"}
+            </button>
+          )}
 
           {canManage && (
             <div className="flex items-center gap-2">
@@ -360,7 +413,7 @@ export default function JobDetail() {
                     </div>
                   ) : (
                     <button
-                      onClick={() => { setApplyOpen(true); setApplyError(null); }}
+                      onClick={openApplyModal}
                       className="w-full py-2.5 text-sm font-medium rounded-xl bg-teal-600 hover:bg-teal-700 text-white transition-colors"
                     >
                       Apply Now
@@ -414,53 +467,113 @@ export default function JobDetail() {
             </div>
 
             <div className="px-6 py-5 space-y-5">
-              {/* Cover letter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  Cover Letter <span className="text-gray-400 font-normal">(optional)</span>
-                </label>
-                <textarea
-                  rows={8}
-                  value={coverLetter}
-                  onChange={(e) => setCoverLetter(e.target.value)}
-                  placeholder="Tell the recruiter why you're a great fit for this role..."
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm text-gray-900 dark:text-white px-3.5 py-2.5 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-y min-h-30"
-                />
-              </div>
+              {/* Profile preview */}
+              {(user?.headline || user?.location || user?.expected_salary || user?.skills) && (
+                <div className="rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 space-y-2">
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Your Profile</p>
+                  {user.headline && <p className="text-sm font-medium text-gray-900 dark:text-white">{user.headline}</p>}
+                  <div className="flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400">
+                    {user.location && <span>{user.location}</span>}
+                    {user.years_of_experience != null && <span>· {user.years_of_experience}yr exp</span>}
+                    {user.expected_salary && (
+                      <span className="text-teal-700 dark:text-teal-400 font-medium">
+                        · Expected: {user.salary_currency ?? "PHP"} {user.expected_salary.toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                  {user.skills && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {user.skills.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 6).map((s) => (
+                        <span key={s} className="px-2 py-0.5 text-xs rounded-full bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 border border-teal-100 dark:border-teal-800">{s}</span>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                    <a href="/profile" target="_blank" rel="noreferrer" className="text-teal-600 dark:text-teal-400 hover:underline">Edit your profile</a> to update this information.
+                  </p>
+                </div>
+              )}
 
-              {/* Resume upload */}
+              {/* Resume */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Resume <span className="text-gray-400 font-normal">(PDF, max 5 MB, optional)</span>
                 </label>
+
+                {user?.resume_url && (
+                  <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer mb-3 transition-colors ${
+                    useProfileResume && !resumeFile
+                      ? "border-teal-400 dark:border-teal-600 bg-teal-50 dark:bg-teal-900/20"
+                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                  }`}>
+                    <input
+                      type="radio"
+                      checked={useProfileResume && !resumeFile}
+                      onChange={() => { setUseProfileResume(true); setResumeFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                      className="accent-teal-600"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">Use my saved resume</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">PDF on file from your profile</p>
+                    </div>
+                    <a
+                      href={`${API_BASE}${user.resume_url}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-xs text-teal-600 dark:text-teal-400 hover:underline shrink-0"
+                    >
+                      Preview
+                    </a>
+                  </label>
+                )}
+
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept=".pdf,application/pdf"
                   className="hidden"
-                  onChange={(e) => setResumeFile(e.target.files?.[0] ?? null)}
+                  onChange={(e) => { setResumeFile(e.target.files?.[0] ?? null); setUseProfileResume(false); }}
                 />
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full py-2.5 px-4 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400 hover:border-teal-400 dark:hover:border-teal-600 hover:text-teal-600 dark:hover:text-teal-400 transition-colors flex items-center justify-center gap-2"
+                  className={`w-full py-2.5 px-4 rounded-xl border-2 border-dashed text-sm transition-colors flex items-center justify-center gap-2 ${
+                    resumeFile
+                      ? "border-teal-400 dark:border-teal-600 text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20"
+                      : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-teal-400 dark:hover:border-teal-600 hover:text-teal-600 dark:hover:text-teal-400"
+                  }`}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                     <polyline points="17 8 12 3 7 8" />
                     <line x1="12" y1="3" x2="12" y2="15" />
                   </svg>
-                  {resumeFile ? resumeFile.name : "Upload PDF resume"}
+                  {resumeFile ? resumeFile.name : (user?.resume_url ? "Upload different resume" : "Upload PDF resume")}
                 </button>
                 {resumeFile && (
                   <button
                     type="button"
-                    onClick={() => { setResumeFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                    onClick={() => { setResumeFile(null); setUseProfileResume(!!(user?.resume_url)); if (fileInputRef.current) fileInputRef.current.value = ""; }}
                     className="mt-1 text-xs text-red-500 hover:underline"
                   >
                     Remove
                   </button>
                 )}
+              </div>
+
+              {/* Cover letter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Cover Letter <span className="text-gray-400 font-normal">(optional)</span>
+                </label>
+                <textarea
+                  rows={6}
+                  value={coverLetter}
+                  onChange={(e) => setCoverLetter(e.target.value)}
+                  placeholder="Tell the recruiter why you're a great fit for this role..."
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm text-gray-900 dark:text-white px-3.5 py-2.5 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-y min-h-28"
+                />
               </div>
 
               {applyError && (

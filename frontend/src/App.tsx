@@ -13,6 +13,10 @@ import Profile from "./pages/Profile";
 import MyApplications from "./pages/MyApplications";
 import Applicants from "./pages/Applicants";
 import Pipeline from "./pages/Pipeline";
+import ApplicantProfile from "./pages/ApplicantProfile";
+import SavedApplicants from "./pages/SavedApplicants";
+import SavedJobs from "./pages/SavedJobs";
+import UserManagement from "./pages/UserManagement";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
@@ -88,6 +92,38 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Pipeline />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/applicants/:id"
+          element={
+            <ProtectedRoute>
+              <ApplicantProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/saved-applicants"
+          element={
+            <ProtectedRoute>
+              <SavedApplicants />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/saved-jobs"
+          element={
+            <ProtectedRoute>
+              <SavedJobs />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute>
+              <UserManagement />
             </ProtectedRoute>
           }
         />

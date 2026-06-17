@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api/api";
 import { useAuthStore } from "../store/authStore";
@@ -41,13 +42,16 @@ interface Props {
   job: Job;
   canManage?: boolean;
   onDeleted?: (id: number) => void;
+  saved?: boolean;
+  onSavedChange?: (jobId: number, saved: boolean) => void;
 }
 
-export default function JobCard({ job, canManage = false, onDeleted }: Props) {
+export default function JobCard({ job, canManage = false, onDeleted, saved = false, onSavedChange }: Props) {
   const { isAuthenticated, user } = useAuthStore();
   const salary = formatSalary(job.salary_min, job.salary_max, job.salary_currency);
   const navigate = useNavigate();
   const plainDescription = job.description ? stripHtml(job.description) : null;
+  const [bookmarking, setBookmarking] = useState(false);
 
   const canEdit =
     canManage &&
@@ -56,6 +60,8 @@ export default function JobCard({ job, canManage = false, onDeleted }: Props) {
     canManage &&
     (user?.role === "admin" || user?.role === "hr" || job.posted_by_id === user?.id);
 
+  const showBookmark = isAuthenticated && !canManage;
+
   async function handleDelete() {
     if (!window.confirm(`Delete "${job.title}"? This cannot be undone.`)) return;
     try {
@@ -63,6 +69,26 @@ export default function JobCard({ job, canManage = false, onDeleted }: Props) {
       onDeleted?.(job.id);
     } catch {
       alert("Failed to delete job. Please try again.");
+    }
+  }
+
+  async function toggleBookmark(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (bookmarking) return;
+    setBookmarking(true);
+    try {
+      if (saved) {
+        await api.delete(`/saved-jobs/${job.id}`);
+        onSavedChange?.(job.id, false);
+      } else {
+        await api.post(`/saved-jobs/${job.id}`);
+        onSavedChange?.(job.id, true);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setBookmarking(false);
     }
   }
 
@@ -181,26 +207,44 @@ export default function JobCard({ job, canManage = false, onDeleted }: Props) {
             {formatDate(job.created_at)}
           </div>
 
-          {(canEdit || canDelete) && (
-            <div className="flex items-center gap-1.5">
-              {canEdit && (
-                <button
-                  onClick={() => navigate(`/jobs/${job.id}/edit`)}
-                  className="px-3 py-1 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  Edit
-                </button>
-              )}
-              {canDelete && (
-                <button
-                  onClick={handleDelete}
-                  className="px-3 py-1 text-xs font-medium rounded-lg border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                >
-                  Delete
-                </button>
-              )}
-            </div>
-          )}
+          <div className="flex items-center gap-1.5">
+            {showBookmark && (
+              <button
+                onClick={toggleBookmark}
+                disabled={bookmarking}
+                title={saved ? "Remove bookmark" : "Save job"}
+                className={`p-1.5 rounded-lg border transition-colors disabled:opacity-50 ${
+                  saved
+                    ? "border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400"
+                    : "border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-amber-500"
+                }`}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                </svg>
+              </button>
+            )}
+            {(canEdit || canDelete) && (
+              <>
+                {canEdit && (
+                  <button
+                    onClick={() => navigate(`/jobs/${job.id}/edit`)}
+                    className="px-3 py-1 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    Edit
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    onClick={handleDelete}
+                    className="px-3 py-1 text-xs font-medium rounded-lg border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    Delete
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
 
       </div>

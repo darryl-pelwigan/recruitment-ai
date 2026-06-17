@@ -8,6 +8,18 @@ export interface User {
   role: string;
   avatar_url?: string | null;
   created_at: string;
+  // Extended applicant profile
+  phone?: string | null;
+  location?: string | null;
+  headline?: string | null;
+  summary?: string | null;
+  expected_salary?: number | null;
+  salary_currency?: string;
+  skills?: string | null;
+  resume_url?: string | null;
+  linkedin_url?: string | null;
+  portfolio_url?: string | null;
+  years_of_experience?: number | null;
 }
 
 interface AuthState {

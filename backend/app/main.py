@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.routes import auth, jobs, applications
+from app.routes import auth, jobs, applications, users, saved_applicants, saved_jobs, admin
 
 app = FastAPI(title="Recruitment AI System", version="1.0")
 
@@ -27,6 +27,10 @@ app.mount("/uploads", StaticFiles(directory=os.path.join(_base)), name="uploads"
 app.include_router(auth.router, prefix="/api")
 app.include_router(jobs.router, prefix="/api")
 app.include_router(applications.router, prefix="/api")
+app.include_router(users.router, prefix="/api")
+app.include_router(saved_applicants.router, prefix="/api")
+app.include_router(saved_jobs.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
 
 
 @app.get("/api/")

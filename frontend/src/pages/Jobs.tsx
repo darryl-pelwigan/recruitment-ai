@@ -19,7 +19,7 @@ interface JobListResponse {
 const MANAGE_ROLES = ["admin", "hr", "recruiter"];
 
 export default function Jobs() {
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const canManage = user ? MANAGE_ROLES.includes(user.role) : false;
   const [data, setData] = useState<JobListResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,6 +29,24 @@ export default function Jobs() {
   const [location, setLocation] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [locationInput, setLocationInput] = useState("");
+  const [savedJobIds, setSavedJobIds] = useState<Set<number>>(new Set());
+
+  // Load saved job IDs for non-manager authenticated users
+  useEffect(() => {
+    if (isAuthenticated && !canManage) {
+      api.get("/saved-jobs/").then((res) => {
+        setSavedJobIds(new Set(res.data.map((s: { job: { id: number } }) => s.job.id)));
+      }).catch(() => {});
+    }
+  }, [isAuthenticated, canManage]);
+
+  function handleSavedChange(jobId: number, saved: boolean) {
+    setSavedJobIds((prev) => {
+      const next = new Set(prev);
+      if (saved) next.add(jobId); else next.delete(jobId);
+      return next;
+    });
+  }
 
   useEffect(() => {
     setLoading(true);
@@ -191,6 +209,8 @@ export default function Jobs() {
                 job={job}
                 canManage={canManage}
                 onDeleted={handleJobDeleted}
+                saved={savedJobIds.has(job.id)}
+                onSavedChange={handleSavedChange}
               />
             ))}
           </div>

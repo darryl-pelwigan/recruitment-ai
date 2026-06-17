@@ -7,13 +7,15 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import create_access_token, get_current_user
-from app.schemas.user_schema import Token, UserCreate, UserLogin, UserResponse, UserUpdate
+from app.schemas.user_schema import ExtendedProfileUpdate, Token, UserCreate, UserLogin, UserResponse, UserUpdate
 from app.services.auth_service import (
     authenticate_user,
     create_user,
     get_user_by_email,
+    update_extended_profile,
     update_user_profile,
     update_user_avatar,
+    update_user_resume,
 )
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -102,3 +104,46 @@ async def upload_avatar(
 
     avatar_url = f"/uploads/avatars/{filename}"
     return update_user_avatar(db, current_user, avatar_url)
+
+
+@router.put("/extended-profile", response_model=UserResponse)
+def update_extended_profile_route(
+    data: ExtendedProfileUpdate,
+    current_user: Annotated[object, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    return update_extended_profile(db, current_user, data)
+
+
+@router.post("/resume", response_model=UserResponse)
+async def upload_resume(
+    file: Annotated[UploadFile, File()],
+    current_user: Annotated[object, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    if file.content_type != "application/pdf":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Resume must be a PDF file",
+        )
+    content = await file.read()
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File size must be under 5 MB",
+        )
+
+    resume_dir = os.path.join(os.path.dirname(__file__), "..", "..", "uploads", "resumes")
+    os.makedirs(resume_dir, exist_ok=True)
+
+    if current_user.resume_url:
+        old_filename = current_user.resume_url.split("/")[-1]
+        old_path = os.path.join(resume_dir, old_filename)
+        if os.path.exists(old_path):
+            os.remove(old_path)
+
+    filename = f"{uuid.uuid4().hex}.pdf"
+    with open(os.path.join(resume_dir, filename), "wb") as f:
+        f.write(content)
+
+    return update_user_resume(db, current_user, f"/uploads/resumes/{filename}")
