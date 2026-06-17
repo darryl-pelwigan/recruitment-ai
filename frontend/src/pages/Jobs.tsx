@@ -25,7 +25,7 @@ export default function Jobs() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [employmentType, setEmploymentType] = useState("");
+  const [employmentTypes, setEmploymentTypes] = useState<string[]>([]);
   const [location, setLocation] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [locationInput, setLocationInput] = useState("");
@@ -60,7 +60,7 @@ export default function Jobs() {
     params.set("page", String(page));
     params.set("page_size", "10");
     if (search) params.set("search", search);
-    if (employmentType) params.set("employment_type", employmentType);
+    employmentTypes.forEach((t) => params.append("employment_type", t));
     if (location) params.set("location", location);
     if (canManage && myListings && user?.id) params.set("posted_by_id", String(user.id));
 
@@ -68,7 +68,7 @@ export default function Jobs() {
       .get<JobListResponse>(`/jobs/?${params.toString()}`)
       .then((res) => setData(res.data))
       .finally(() => setLoading(false));
-  }, [page, search, employmentType, location, myListings, canManage, user?.id]);
+  }, [page, search, employmentTypes, location, myListings, canManage, user?.id]);
 
   function handleSearch(e: { preventDefault(): void }) {
     e.preventDefault();
@@ -79,7 +79,9 @@ export default function Jobs() {
 
   function handleTypeChange(type: string) {
     setPage(1);
-    setEmploymentType((prev) => (prev === type ? "" : type));
+    setEmploymentTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
   }
 
   function handleClear() {
@@ -87,7 +89,7 @@ export default function Jobs() {
     setLocationInput("");
     setSearch("");
     setLocation("");
-    setEmploymentType("");
+    setEmploymentTypes([]);
     setPage(1);
   }
 
@@ -215,7 +217,7 @@ export default function Jobs() {
                   type="button"
                   onClick={() => handleTypeChange(type)}
                   className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${
-                    employmentType === type
+                    employmentTypes.includes(type)
                       ? "bg-teal-600 border-teal-600 text-white"
                       : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-teal-400 hover:text-teal-600 dark:hover:text-teal-400"
                   }`}
@@ -225,7 +227,7 @@ export default function Jobs() {
               ))}
 
               {/* Clear — only when a filter is active */}
-              {(search || location || employmentType) && (
+              {(search || location || employmentTypes.length > 0) && (
                 <button
                   type="button"
                   onClick={handleClear}

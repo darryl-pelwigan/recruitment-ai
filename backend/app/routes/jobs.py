@@ -37,12 +37,12 @@ def list_jobs(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=50),
     search: Optional[str] = Query(None),
-    employment_type: Optional[str] = Query(None),
+    employment_type: list[str] = Query(default=[]),
     location: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     posted_by_id: Optional[int] = Query(None),
 ):
-    return get_jobs(db, page, page_size, search, employment_type, location, status, posted_by_id)
+    return get_jobs(db, page, page_size, search, employment_type or None, location, status, posted_by_id)
 
 
 @router.get("/{job_id}", response_model=JobResponse)
