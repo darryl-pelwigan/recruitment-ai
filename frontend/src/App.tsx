@@ -12,6 +12,7 @@ import JobDetail from "./pages/JobDetail";
 import Profile from "./pages/Profile";
 import MyApplications from "./pages/MyApplications";
 import Applicants from "./pages/Applicants";
+import Pipeline from "./pages/Pipeline";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
@@ -79,6 +80,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Applicants />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs/:id/pipeline"
+          element={
+            <ProtectedRoute>
+              <Pipeline />
             </ProtectedRoute>
           }
         />

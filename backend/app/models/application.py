@@ -11,6 +11,8 @@ from app.core.database import Base
 if TYPE_CHECKING:
     from app.models.user import User
     from app.models.job import Job
+    from app.models.application_note import ApplicationNote
+    from app.models.application_history import ApplicationHistory
 
 
 class Application(Base):
@@ -29,3 +31,9 @@ class Application(Base):
 
     user: Mapped[User] = relationship(back_populates="applications")
     job: Mapped[Job] = relationship(back_populates="applications")
+    notes: Mapped[list[ApplicationNote]] = relationship(
+        back_populates="application", cascade="all, delete-orphan"
+    )
+    history: Mapped[list[ApplicationHistory]] = relationship(
+        back_populates="application", cascade="all, delete-orphan"
+    )

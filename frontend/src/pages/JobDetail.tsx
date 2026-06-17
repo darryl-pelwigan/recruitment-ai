@@ -233,6 +233,18 @@ export default function JobDetail() {
               >
                 View Applicants
               </Link>
+              <Link
+                to={`/jobs/${job.id}/pipeline`}
+                className="px-4 py-2 text-sm font-medium rounded-xl border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors inline-flex items-center gap-1.5"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                </svg>
+                Pipeline
+              </Link>
               <button
                 onClick={() => navigate(`/jobs/${job.id}/edit`)}
                 className="px-4 py-2 text-sm font-medium rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"

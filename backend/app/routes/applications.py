@@ -13,12 +13,16 @@ from app.schemas.application_schema import (
     ApplicationStatusUpdate,
     VALID_STATUSES,
 )
+from app.schemas.pipeline_schema import NoteCreate, NoteResponse, HistoryResponse
 from app.services.application_service import (
+    add_note,
     already_applied,
     create_application,
     get_applicant_count_for_user,
     get_application_by_id,
     get_applications_for_job,
+    get_history,
+    get_notes,
     get_recent_applications_for_user,
     get_user_applications,
     update_application_status,
@@ -67,6 +71,45 @@ def job_applications(
     return ApplicationListResponse(applications=apps, total=len(apps))
 
 
+@router.get("/{app_id}/notes", response_model=list[NoteResponse])
+def list_notes(
+    app_id: int,
+    current_user: Annotated[object, Depends(MANAGE_ROLES)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    app = get_application_by_id(db, app_id)
+    if not app:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Application not found")
+    return get_notes(db, app_id)
+
+
+@router.post("/{app_id}/notes", response_model=NoteResponse, status_code=status.HTTP_201_CREATED)
+def create_note(
+    app_id: int,
+    data: NoteCreate,
+    current_user: Annotated[object, Depends(MANAGE_ROLES)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    if not data.content.strip():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Note content cannot be empty")
+    app = get_application_by_id(db, app_id)
+    if not app:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Application not found")
+    return add_note(db, app_id, current_user.id, data.content.strip())
+
+
+@router.get("/{app_id}/history", response_model=list[HistoryResponse])
+def list_history(
+    app_id: int,
+    current_user: Annotated[object, Depends(MANAGE_ROLES)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    app = get_application_by_id(db, app_id)
+    if not app:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Application not found")
+    return get_history(db, app_id)
+
+
 @router.patch("/{app_id}/status", response_model=ApplicationResponse)
 def set_status(
     app_id: int,
@@ -79,7 +122,7 @@ def set_status(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid status. Must be one of: {', '.join(VALID_STATUSES)}",
         )
-    app = update_application_status(db, app_id, data.status)
+    app = update_application_status(db, app_id, data.status, current_user.id)
     if not app:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Application not found")
     return app

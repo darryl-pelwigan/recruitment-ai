@@ -2,6 +2,8 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 
 from app.models.application import Application
+from app.models.application_note import ApplicationNote
+from app.models.application_history import ApplicationHistory
 from app.models.job import Job
 
 
@@ -87,10 +89,59 @@ def get_applicant_count_for_user(db: Session, user_id: int, role: str) -> int:
     return query.scalar() or 0
 
 
-def update_application_status(db: Session, app_id: int, new_status: str) -> Application | None:
+def update_application_status(
+    db: Session, app_id: int, new_status: str, changed_by_id: int
+) -> Application | None:
     app = db.query(Application).filter(Application.id == app_id).first()
     if not app:
         return None
+    old_status = app.status
     app.status = new_status
+    history = ApplicationHistory(
+        application_id=app_id,
+        from_status=old_status,
+        to_status=new_status,
+        changed_by_id=changed_by_id,
+    )
+    db.add(history)
     db.commit()
     return _load(db, app_id)
+
+
+def get_notes(db: Session, application_id: int) -> list[ApplicationNote]:
+    return (
+        db.query(ApplicationNote)
+        .options(joinedload(ApplicationNote.author))
+        .filter(ApplicationNote.application_id == application_id)
+        .order_by(ApplicationNote.created_at.asc())
+        .all()
+    )
+
+
+def add_note(
+    db: Session, application_id: int, author_id: int, content: str
+) -> ApplicationNote:
+    note = ApplicationNote(
+        application_id=application_id,
+        author_id=author_id,
+        content=content,
+    )
+    db.add(note)
+    db.commit()
+    db.refresh(note)
+    return (
+        db.query(ApplicationNote)
+        .options(joinedload(ApplicationNote.author))
+        .filter(ApplicationNote.id == note.id)
+        .first()
+    )
+
+
+def get_history(db: Session, application_id: int) -> list[ApplicationHistory]:
+    return (
+        db.query(ApplicationHistory)
+        .options(joinedload(ApplicationHistory.changed_by))
+        .filter(ApplicationHistory.application_id == application_id)
+        .order_by(ApplicationHistory.changed_at.asc())
+        .all()
+    )

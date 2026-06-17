@@ -110,6 +110,18 @@ export default function Applicants() {
           </div>
 
           <div className="flex items-center gap-2">
+            <Link
+              to={`/jobs/${id}/pipeline`}
+              className="px-3 py-1.5 text-xs font-medium rounded-lg border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors inline-flex items-center gap-1.5"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+              </svg>
+              Pipeline
+            </Link>
             <label className="text-xs text-gray-500 dark:text-gray-400">Filter:</label>
             <select
               value={filterStatus}
