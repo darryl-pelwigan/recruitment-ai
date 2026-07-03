@@ -1,12 +1,25 @@
 import { create } from "zustand";
 import { api } from "../api/api";
 
-interface User {
+export interface User {
   id: number;
   full_name: string;
   email: string;
   role: string;
+  avatar_url?: string | null;
   created_at: string;
+  // Extended applicant profile
+  phone?: string | null;
+  location?: string | null;
+  headline?: string | null;
+  summary?: string | null;
+  expected_salary?: number | null;
+  salary_currency?: string;
+  skills?: string | null;
+  resume_url?: string | null;
+  linkedin_url?: string | null;
+  portfolio_url?: string | null;
+  years_of_experience?: number | null;
 }
 
 interface AuthState {
@@ -15,27 +28,37 @@ interface AuthState {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (full_name: string, email: string, password: string, role: string) => Promise<void>;
+  updateUser: (updated: User) => void;
   logout: () => void;
 }
 
+const storedUser = localStorage.getItem("user");
+
 export const useAuthStore = create<AuthState>((set) => ({
   token: localStorage.getItem("token"),
-  user: null,
+  user: storedUser ? JSON.parse(storedUser) : null,
   isAuthenticated: !!localStorage.getItem("token"),
 
   login: async (email, password) => {
     const res = await api.post("/auth/login", { email, password });
-    const { access_token } = res.data;
+    const { access_token, user } = res.data;
     localStorage.setItem("token", access_token);
-    set({ token: access_token, isAuthenticated: true });
+    localStorage.setItem("user", JSON.stringify(user));
+    set({ token: access_token, user, isAuthenticated: true });
   },
 
   register: async (full_name, email, password, role) => {
     await api.post("/auth/register", { full_name, email, password, role });
   },
 
+  updateUser: (updated) => {
+    localStorage.setItem("user", JSON.stringify(updated));
+    set({ user: updated });
+  },
+
   logout: () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     set({ token: null, user: null, isAuthenticated: false });
   },
 }));

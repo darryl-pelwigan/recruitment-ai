@@ -4,23 +4,21 @@ import { useThemeStore } from "./store/themeStore";
 import { useAuthStore } from "./store/authStore";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-
-function Dashboard() {
-  const { logout } = useAuthStore();
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-950 transition-colors duration-200">
-      <div className="text-center">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Dashboard</h1>
-        <button
-          onClick={logout}
-          className="px-4 py-2 rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium hover:bg-gray-700 dark:hover:bg-gray-100 transition-colors"
-        >
-          Logout
-        </button>
-      </div>
-    </div>
-  );
-}
+import Dashboard from "./pages/Dashboard";
+import Jobs from "./pages/Jobs";
+import PostJob from "./pages/PostJob";
+import EditJob from "./pages/EditJob";
+import JobDetail from "./pages/JobDetail";
+import Profile from "./pages/Profile";
+import MyApplications from "./pages/MyApplications";
+import Applicants from "./pages/Applicants";
+import Pipeline from "./pages/Pipeline";
+import ApplicantProfile from "./pages/ApplicantProfile";
+import AllApplicants from "./pages/AllApplicants";
+import SavedApplicants from "./pages/SavedApplicants";
+import SavedJobs from "./pages/SavedJobs";
+import UserManagement from "./pages/UserManagement";
+import Resumes from "./pages/Resumes";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
@@ -47,7 +45,107 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        {/* public — guests can browse and view, but not apply or see salary */}
+        <Route path="/jobs" element={<Jobs />} />
+        <Route
+          path="/jobs/new"
+          element={
+            <ProtectedRoute>
+              <PostJob />
+            </ProtectedRoute>
+          }
+        />
+        {/* public — must come after /jobs/new so "new" isn't treated as an id */}
+        <Route path="/jobs/:id" element={<JobDetail />} />
+        <Route
+          path="/jobs/:id/edit"
+          element={
+            <ProtectedRoute>
+              <EditJob />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-applications"
+          element={
+            <ProtectedRoute>
+              <MyApplications />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs/:id/applicants"
+          element={
+            <ProtectedRoute>
+              <Applicants />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs/:id/pipeline"
+          element={
+            <ProtectedRoute>
+              <Pipeline />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/applicants"
+          element={
+            <ProtectedRoute>
+              <AllApplicants />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/applicants/:id"
+          element={
+            <ProtectedRoute>
+              <ApplicantProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/saved-applicants"
+          element={
+            <ProtectedRoute>
+              <SavedApplicants />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/saved-jobs"
+          element={
+            <ProtectedRoute>
+              <SavedJobs />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resumes"
+          element={
+            <ProtectedRoute>
+              <Resumes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute>
+              <UserManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/jobs" replace />} />
       </Routes>
     </BrowserRouter>
   );

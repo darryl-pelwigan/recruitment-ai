@@ -4,7 +4,7 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 
 from app.core.database import Base
-from app.models import User, Job, Application  # noqa: F401 — registers models with Base
+from app.models import User, Job, Application, ApplicationNote, ApplicationHistory, SavedApplicant, SavedJob  # noqa: F401 — registers models with Base
 
 config = context.config
 

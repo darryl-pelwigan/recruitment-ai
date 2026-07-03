@@ -1,2 +1,40 @@
 @import "tailwindcss";
 @variant dark (&:where(.dark, .dark *));
+
+/* TipTap / ProseMirror editor content styles */
+.prose-editor {
+  color: theme(colors.gray.900);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.prose-editor p { margin: 0 0 0.5rem; }
+.prose-editor p:last-child { margin-bottom: 0; }
+.prose-editor h1 { font-size: 1.5rem; font-weight: 700; margin: 0.75rem 0 0.4rem; }
+.prose-editor h2 { font-size: 1.25rem; font-weight: 700; margin: 0.75rem 0 0.4rem; }
+.prose-editor h3 { font-size: 1.1rem;  font-weight: 600; margin: 0.75rem 0 0.4rem; }
+.prose-editor strong { font-weight: 700; }
+.prose-editor em { font-style: italic; }
+.prose-editor u  { text-decoration: underline; }
+.prose-editor s  { text-decoration: line-through; }
+.prose-editor ul { list-style-type: disc;    padding-left: 1.4rem; margin: 0.4rem 0; }
+.prose-editor ol { list-style-type: decimal; padding-left: 1.4rem; margin: 0.4rem 0; }
+.prose-editor li { margin: 0.2rem 0; }
+.prose-editor blockquote {
+  border-left: 3px solid theme(colors.teal.500);
+  padding-left: 0.75rem;
+  color: theme(colors.gray.500);
+  margin: 0.5rem 0;
+}
+.prose-editor code {
+  background: theme(colors.gray.100);
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.3rem;
+  font-family: monospace;
+  font-size: 0.8rem;
+}
+
+@variant dark {
+  .prose-editor { color: theme(colors.gray.100); }
+  .prose-editor blockquote { color: theme(colors.gray.400); }
+  .prose-editor code { background: theme(colors.gray.700); }
+}
