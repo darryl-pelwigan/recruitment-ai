@@ -63,3 +63,6 @@ logs/
 # ── Claude Code ──────────────────────────────────────────────────────────────
 CLAUDE.md
 .claude/
+
+.playwright-mcp
+
